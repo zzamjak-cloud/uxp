@@ -1,0 +1,135 @@
+body {
+  color: rgb(255, 255, 255);
+  padding: 16px;
+}
+li:before {
+content: '• ';
+width: 3em;
+}
+
+#layers {
+border: none;
+padding: 8px;
+}
+
+/* Tooltip */
+.sp-icons-button sp-tooltip {
+display: none;
+position: absolute;
+bottom: 80%;
+left: 50%;
+transform: translate(-50%, 0%);
+/* right: 50%; */
+text-align: center;
+z-index: 9999 !important; /* 추가 */
+pointer-events: none; /* 추가: 툴팁이 마우스 이벤트를 방해하지 않도록 */
+}
+
+.sp-icons-button {
+width:30px;
+height: 30px;
+position: relative; /* 추가 */
+}
+
+.sp-icons-button:hover {
+cursor: pointer;
+}
+
+.sp-button {
+width: 90px; /* 버튼의 너비 */
+height: 24px; /* 버튼의 높이 */
+border: none;
+border-radius: 4px; /* 모서리 라운드값 */
+background-color: rgb(177, 177, 177); /* 배경색 */
+color: rgb(86, 86, 86); /* 텍스트 색상 */
+font-size: 12px; /* 텍스트 크기 설정 */
+}
+
+.sp-button:hover {
+cursor: pointer;
+}
+
+.fix-button {
+width: 90px; /* 버튼의 너비 */
+height: 24px; /* 버튼의 높이 */
+border-radius: 4px; /* 모서리 라운드값 */
+background-color: lightgray; /* 배경색 */
+color: rgb(86, 86, 86); /* 텍스트 색상 */
+font-size: 12px; /* 텍스트 크기 설정 */
+}
+
+.fix-button:hover {
+cursor: pointer;
+}
+
+.small-button {
+width: 150px;
+background-color: rgb(90, 90, 90); /* 배경색 */
+color: rgb(233, 233, 233); /* 텍스트 색상 */
+}
+
+.small-button:hover {
+cursor: pointer;
+}
+
+.filter {
+padding: 0 1em 1em 1em;
+border-radius: 0.5em;
+border: 1px solid rgb(36, 36, 36);
+background-color: #1c1c1c80;
+margin: 0.75em 0;
+}
+
+.button-group-container {
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.text-field-container {
+display: flex;
+/* justify-content: center;
+align-items: center; */
+/* width: 90px;
+height: 24px; */
+margin-top: 8px;
+margin-bottom: 8px;
+position: relative; /* 추가 */
+z-index: 1; /* 추가: 툴팁보다 낮은 값 */
+}
+
+.sp-textfield {
+width: 90px;
+height: 24px;
+position: relative; /* 추가 */
+z-index: 10000; /* 추가: 툴팁보다 낮은 값 */
+}
+
+/* .text-field-container sp-textfield {
+text-align: center;
+} */
+
+.sub-title-container {
+size: 14px;
+color: rgb(157, 157, 157); /* 텍스트 색상 */
+margin-top: 4px;
+margin-bottom: 4px;
+display: flex;
+justify-content: center;
+}
+
+/* 초기에 숨겨진 UI 요소의 스타일 */
+.expandable-ui {
+display: none;
+}
+
+
+
+.sp-icons-button:hover sp-tooltip {
+display: block;
+}
+
+.divider-spacing {
+margin: 10px 0;
+}
+
