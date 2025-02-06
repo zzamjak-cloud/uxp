@@ -432,6 +432,147 @@ async function setLocking(value) {
    );
 }
 
+async function selectionForLayer() {
+   const result = await batchPlay(
+      [
+         {
+            _obj: "set",
+            _target: [
+               {
+                  _ref: "channel",
+                  _property: "selection"
+               }
+            ],
+            to: {
+               _ref: "channel",
+               _enum: "channel",
+               _value: "transparencyEnum"
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
+async function makeWorkPath(value) {
+   const result = await batchPlay(
+      [
+         {
+            _obj: "make",
+            _target: [
+               {
+                  _ref: "path"
+               }
+            ],
+            from: {
+               _ref: "selectionClass",
+               _property: "selection"
+            },
+            tolerance: {
+               _unit: "pixelsUnit",
+               _value: value
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
+async function makeShape(layerID) {
+   const result = await batchPlay(
+      [
+         {
+            _obj: "make",
+            _target: [
+               {
+                  _ref: "contentLayer"
+               }
+            ],
+            using: {
+               _obj: "contentLayer",
+               type: {
+                  _obj: "solidColorLayer",
+                  color: {
+                     _obj: "RGBColor",
+                     red: 0.0,
+                     grain: 0.0,
+                     blue: 0.0
+                  }
+               },
+               shape: {
+                  _obj: "pathClass",
+                  targetPath: {
+                     _enum: "pathKind",
+                     _value: "targetPath"
+                  }
+               },
+               strokeStyle: {
+                  _obj: "strokeStyle",
+                  strokeStyleVersion: 2,
+                  strokeEnabled: false,
+                  fillEnabled: true,
+                  strokeStyleLineWidth: {
+                     _unit: "pixelsUnit",
+                     _value: 1
+                  },
+                  strokeStyleLineDashOffset: {
+                     _unit: "pointsUnit",
+                     _value: 0
+                  },
+                  strokeStyleMiterLimit: 100,
+                  strokeStyleLineCapType: {
+                     _enum: "strokeStyleLineCapType",
+                     _value: "strokeStyleButtCap"
+                  },
+                  strokeStyleLineJoinType: {
+                     _enum: "strokeStyleLineJoinType",
+                     _value: "strokeStyleMiterJoin"
+                  },
+                  strokeStyleLineAlignment: {
+                     _enum: "strokeStyleLineAlignment",
+                     _value: "strokeStyleAlignCenter"
+                  },
+                  strokeStyleScaleLock: false,
+                  strokeStyleStrokeAdjust: false,
+                  strokeStyleLineDashSet: [],
+                  strokeStyleBlendMode: {
+                     _enum: "blendMode",
+                     _value: "normal"
+                  },
+                  strokeStyleOpacity: {
+                     _unit: "percentUnit",
+                     _value: 100
+                  },
+                  strokeStyleContent: {
+                     _obj: "solidColorLayer",
+                     color: {
+                        _obj: "RGBColor",
+                        red: 0,
+                        grain: 0,
+                        blue: 0
+                     }
+                  },
+                  strokeStyleResolution: 72
+               }
+            },
+            layerID: layerID,
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
+
+
 module.exports = {
    actionCommands,
    addSelectLayer,
@@ -444,6 +585,8 @@ module.exports = {
    layTransform,
    layOpacity,
    makeGroup,
+   makeShape,
+   makeWorkPath,
    moveLayer,
    moveLayerTarget,
    relinkToFile,
@@ -453,4 +596,5 @@ module.exports = {
    selectByLayerID,
    setLayerName,
    setLocking,
+   selectionForLayer
 };

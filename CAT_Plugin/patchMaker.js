@@ -1,306 +1,214 @@
 const app = require('photoshop').app;
-const {executeAsModal} = require("photoshop").core;
-const {selectLayerByName, setLayerName, deleteLayer, layerTranslate, layerTrim, actionCommands} = require("./lib/lib_layer");
-const {showAlert} = require("./lib/lib");
-const {rectangularMarqueeTool} = require("./lib/lib_tool");
+const { executeAsModal } = require('photoshop').core;
+const { selectLayerByName, setLayerName, deleteLayer, layerTranslate, layerTrim, actionCommands } = require('./lib/lib_layer');
+const { rectangularMarqueeTool } = require('./lib/lib_tool');
+const { handleError } = require('./lib/errorHandler');
+const { Logger } = require('./lib/logger');
 
-async function patchMaker() {
-    const doc = app.activeDocument;
-    const lays = doc.layers;
+const logger = new Logger('PatchMaker');
 
-    // 레이어 이름 변경 => "Source"
-    const layer_name = "Source";
-    await executeAsModal(() => {selectLayerByName(lays[0].name)}, {"commandName": "Select Layer"});
-    await executeAsModal(() => {setLayerName(layer_name)}, {"commandName": "Rename Layer"});
+const PATCH_TYPES = {
+    VERTICAL: 'vertical',           // 수직 2개
+    HORIZONTAL: 'horizontal',       // 수평 2개
+    ALL: 'all',                    // 수직 2개, 수평 2개
+    VERTICAL_SYMMETRY: 'v_sym',    // 수직 1개 (대칭)
+    HORIZONTAL_SYMMETRY: 'h_sym',  // 수평 1개 (대칭)
+    ALL_SYMMETRY: 'all_sym',       // 수직 1개, 수평 1개 (모두 대칭)
+    MIXED_V2H1: 'mixed_v2h1',     // 수직 2개, 수평 1개
+    MIXED_V1H2: 'mixed_v1h2'      // 수직 1개, 수평 2개
+};
 
-    await executeAsModal(layerTrim, {"commandName": "Trim"});
-
-    // 현재 레이어의 Bounds & Guides를 획득
-    const guides = doc.guides;
-    if (guides.length === 0) {
-        showAlert("가이드가 없습니다.");
-        return;
-    }
-
-    // 레이어 바운즈 얻기
-    const boundArray = lays[0].bounds;
-    const top = boundArray["_top"];
-    const left = boundArray["_left"];
-    const bottom = boundArray["_bottom"];
-    const right = boundArray["_right"];
-    const width = boundArray["width"];
-    const height = boundArray["height"];
-    console.log(`top:${top}, left:${left}, bottom:${bottom}, right:${right} width:${width}, height:${height}`);
-
-    // 가이드 리스트 얻기
-    const guideArray = getGuides(guides);
+// 패치 타입 분석
+function analyzePatchType(vCount, hCount) {
+    if (vCount === 2 && hCount === 2) return PATCH_TYPES.ALL;
+    if (vCount === 2 && hCount === 0) return PATCH_TYPES.VERTICAL;
+    if (vCount === 0 && hCount === 2) return PATCH_TYPES.HORIZONTAL;
+    if (vCount === 1 && hCount === 0) return PATCH_TYPES.VERTICAL_SYMMETRY;
+    if (vCount === 0 && hCount === 1) return PATCH_TYPES.HORIZONTAL_SYMMETRY;
+    if (vCount === 1 && hCount === 1) return PATCH_TYPES.ALL_SYMMETRY;
+    if (vCount === 2 && hCount === 1) return PATCH_TYPES.MIXED_V2H1;
+    if (vCount === 1 && hCount === 2) return PATCH_TYPES.MIXED_V1H2;
     
-    console.log(`vertical 가이드 : ${guideArray[0].length}`);
-    console.log(`horizontal 가이드 : ${guideArray[1].length}`);
+    throw new Error(`유효하지 않은 가이드 구성입니다. 현재 가이드: 수직 ${vCount}개, 수평 ${hCount}개`);
+}
 
-    // vertical, horizontal 모두 비대칭일 경우
-    if(guideArray[0].length == 2 && guideArray[1].length == 2) {
-
-        let v1 = guideArray[0][0];
-        let v2 = guideArray[0][1];
-        let h1 = guideArray[1][0];
-        let h2 = guideArray[1][1];
-
-        allPatch (v1, v2, h1, h2);
-    
-    // Vertical 비대칭일 경우
-    } else if (guideArray[0].length == 2 && guideArray[1].length == 0) {
-
-        console.log("Vertical Patch");
-
-        let v1 = guideArray[0][0];
-        let v2 = guideArray[0][1];
-
-        verticalPatch (v1, v2)
-
-    // Horizontal 비대칭인 경우
-    } else if (guideArray[0].length == 0 && guideArray[1].length == 2) {
-
-        console.log("Horizontal Patch");
-
-        let h1 = guideArray[1][0];
-        let h2 = guideArray[1][1];
-
-        horizontalPatch (h1, h2)
-
-    // Vertical 대칭일 경우
-    } else if(guideArray[0].length == 1 && guideArray[1].length == 0) {
-
-        console.log("Vertical Symetry");
-
-        let v1 = guideArray[0][0];
-        let v2 = null;
-
-        if (v1 < (width * 0.5)) {
-            v2 = width - v1;
-        } else if (v1 > (width * 0.5)) {
-            v2 = v1;
-            v1 = width - v1;
-        }
-
-        verticalPatch (v1, v2)
-
-    // Horisontal 대칭인 경우
-    } else if(guideArray[0].length == 0 && guideArray[1].length == 1) {
-
-        console.log("Horizontal Symetry");
-
-        let h1 = guideArray[1][0];
-        let h2 = null;
-
-        if (h1 < (height * 0.5)) {
-            h2 = height - h1;
-        } else if (h1 > (height * 0.5)) {
-            h2 = h1;
-            h1 = height - h1;
-        }
-
-        horizontalPatch (h1, h2);
-
-    // Vertical, Horizontal 모두 대칭인 경우
-    } else if(guideArray[0].length == 1 && guideArray[1].length == 1) {
-
-        console.log("All Symetry");
-
-        let v1 = guideArray[0][0];
-        let v2 = null;
-        let h1 = guideArray[1][0];
-        let h2 = null;
-
-        if (v1 < (width * 0.5)) {
-            v2 = width - v1;
-        } else if (v1 > (width * 0.5)) {
-            v2 = v1;
-            v1 = width - v1;
-        }
-
-        if (h1 < (height * 0.5)) {
-            h2 = height - h1;
-        } else if (h1 > (height * 0.5)) {
-            h2 = h1;
-            h1 = height - h1;
-        }
-
-        allPatch (v1, v2, h1, h2);
-
-    // Vertical은 대칭이고 Horizontal은 비대칭인 경우
-    } else if(guideArray[0].length == 1 && guideArray[1].length == 2) {
-
-        let v1 = guideArray[0][0];
-        let v2 = null;
-        let h1 = guideArray[1][0];
-        let h2 = guideArray[1][1];
-
-        if (v1 < (width * 0.5)) {
-            v2 = width - v1;
-        } else if (v1 > (width * 0.5)) {
-            v2 = v1;
-            v1 = width - v1;
-        }
-
-        allPatch (v1, v2, h1, h2);
-
-    // Vertical은 비대칭이고 Horizontal은 대칭인 경우
-    } else if(guideArray[0].length == 2 && guideArray[1].length == 1) {
-
-        let v1 = guideArray[0][0];
-        let v2 = guideArray[0][1];
-        let h1 = guideArray[1][0];
-        let h2 = null;
-
-        if (h1 < (height * 0.5)) {
-            h2 = height - h1;
-        } else if (h1 > (height * 0.5)) {
-            h2 = h1;
-            h1 = height - h1;
-        }
-
-        allPatch (v1, v2, h1, h2);
-
-    // 가이드가 너무 많을 경우
-    } else if(guideArray[0].length > 2 || guideArray[1].length > 2) {	
-		showAlert("Guide가 너무 많습니다.");
-    }
-
-    async function allPatch (v1, v2, h1, h2) {
-        // left Cut
-        await executeAsModal(() => {rectangularMarqueeTool(top, left, bottom, v1)}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("left")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-        // Right Cut
-        await executeAsModal(() => {rectangularMarqueeTool(top, v2, bottom, right)}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("right")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-        
-        // Delete Layer "Source"
-        await executeAsModal(deleteLayer, {"commandName": "Delete Layer"});
-
-        // Layer Translate X
-        await executeAsModal(() => {selectLayerByName("right")}, {"commandName": "Select Layer"});
-        await executeAsModal(() => {layerTranslate(doc.activeLayers[0], -(v2-v1), 0)}, {"commandName": "Layer Translate"});
-        await executeAsModal(() => {actionCommands("mergeVisible")}, {"commandName": "command"});
-        await executeAsModal(layerTrim, {"commandName": "Trim"});
-        
-        // layer Name "Source"
-        await executeAsModal(() => {setLayerName(layer_name)}, {"commandName": "Rename Layer"});
-
-        // top Cut
-        await executeAsModal(() => {rectangularMarqueeTool(top, left, h1, width - (v2-v1))}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("top")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-        // bottom Cut
-        await executeAsModal(() => {rectangularMarqueeTool(h2, left, bottom, width - (v2-v1))}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("bottom")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-
-        // Delete Layer "Source"
-        await executeAsModal(deleteLayer, {"commandName": "Delete Layer"});
-
-        // Layer Translate Y
-        await executeAsModal(() => {selectLayerByName("bottom")}, {"commandName": "Select Layer"});
-        await executeAsModal(() => {layerTranslate(doc.activeLayers[0], 0, -(h2-h1))}, {"commandName": "Layer Translate"});
-        await executeAsModal(() => {actionCommands("mergeVisible")}, {"commandName": "command"});
-        await executeAsModal(layerTrim, {"commandName": "Trim"});
-
-        // layer Name "Source"
-        await executeAsModal(() => {setLayerName(layer_name)}, {"commandName": "Rename Layer"});
-
-        // 모든 가이드 제거
-        await executeAsModal(() => {actionCommands("clearAllGuides")}, {"commandName": "command"});
-    }
-
-    async function verticalPatch (v1, v2) {
-        // left Cut
-        await executeAsModal(() => {rectangularMarqueeTool(top, left, bottom, v1)}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("left")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-        // Right Cut
-        await executeAsModal(() => {rectangularMarqueeTool(top, v2, bottom, right)}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("right")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-        
-        // Delete Layer "Source"
-        await executeAsModal(deleteLayer, {"commandName": "Delete Layer"});
-
-        // Layer Translate X
-        await executeAsModal(() => {selectLayerByName("right")}, {"commandName": "Select Layer"});
-        await executeAsModal(() => {layerTranslate(doc.activeLayers[0], -(v2-v1), 0)}, {"commandName": "Layer Translate"});
-        await executeAsModal(() => {actionCommands("mergeVisible")}, {"commandName": "command"});
-        await executeAsModal(layerTrim, {"commandName": "Trim"});
-        
-        // layer Name "Source"
-        await executeAsModal(() => {setLayerName(layer_name)}, {"commandName": "Rename Layer"});
-        
-        // 모든 가이드 제거
-        await executeAsModal(() => {actionCommands("clearAllGuides")}, {"commandName": "command"});
-    }
-
-    async function horizontalPatch (h1, h2) {
-        // top Cut
-        await executeAsModal(() => {rectangularMarqueeTool(top, left, h1, width)}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("top")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-        // bottom Cut
-        await executeAsModal(() => {rectangularMarqueeTool(h2, left, bottom, width)}, {"commandName": "Marquee"});
-        await executeAsModal(() => {actionCommands("cutToLayer")}, {"commandName": "command"});
-        await executeAsModal(() => {setLayerName("bottom")}, {"commandName": "Rename Layer"});
-        await executeAsModal(() => {selectLayerByName(layer_name)}, {"commandName": "Select Layer"});
-
-        // Delete Layer "Source"
-        await executeAsModal(deleteLayer, {"commandName": "Delete Layer"});
-
-        // Layer Translate Y
-        await executeAsModal(() => {selectLayerByName("bottom")}, {"commandName": "Select Layer"});
-        await executeAsModal(() => {layerTranslate(doc.activeLayers[0], 0, -(h2-h1))}, {"commandName": "Layer Translate"});
-        await executeAsModal(() => {actionCommands("mergeVisible")}, {"commandName": "command"});
-        await executeAsModal(layerTrim, {"commandName": "Trim"});
-
-        // layer Name "Source"
-        await executeAsModal(() => {setLayerName(layer_name)}, {"commandName": "Rename Layer"});
-
-        // 모든 가이드 제거
-        await executeAsModal(() => {actionCommands("clearAllGuides")}, {"commandName": "command"});
+async function createSelectionAndCut(top, left, bottom, right, layerName) {
+    try {
+        await selectLayerByName("Source");
+        await rectangularMarqueeTool(top, left, bottom, right);
+        await actionCommands("cutToLayer");
+        await setLayerName(layerName);
+        logger.info(`Created layer: ${layerName}`);
+    } catch (error) {
+        throw new Error(`Failed to process ${layerName}: ${error.message}`);
     }
 }
 
+// 수직 패치
+async function applyVerticalPatch(v1, v2, bounds) {
+    const { top, left, bottom, right } = bounds;
+    
+    await executeAsModal(async () => {
+        await createSelectionAndCut(top, left, bottom, v1, "left");
+    });
 
+    await executeAsModal(async () => {
+        await createSelectionAndCut(top, v2, bottom, right, "right");
+    });
+
+    await executeAsModal(async () => {
+        await selectLayerByName("Source");
+        await deleteLayer();
+        await selectLayerByName("right");
+        await layerTranslate(app.activeDocument.activeLayers[0], -(v2-v1), 0);
+        await actionCommands("mergeVisible");
+        await layerTrim();
+        await setLayerName("Source");
+    });
+}
+
+// 수평 패치
+async function applyHorizontalPatch(h1, h2, bounds) {
+    const { top, left, bottom, right } = bounds;
+    
+    await executeAsModal(async () => {
+        await createSelectionAndCut(top, left, h1, right, "top");
+    });
+
+    await executeAsModal(async () => {
+        await createSelectionAndCut(h2, left, bottom, right, "bottom");
+    });
+
+    await executeAsModal(async () => {
+        await selectLayerByName("Source");
+        await deleteLayer();
+        await selectLayerByName("bottom");
+        await layerTranslate(app.activeDocument.activeLayers[0], 0, -(h2-h1));
+        await actionCommands("mergeVisible");
+        await layerTrim();
+        await setLayerName("Source");
+    });
+}
+
+// 수직 + 수평 패치
+async function applyAllPatch(v1, v2, h1, h2, bounds) {
+    await applyVerticalPatch(v1, v2, bounds);
+    
+    const currentLayer = app.activeDocument.layers[0];
+    const newBounds = {
+        top: currentLayer.bounds._top,
+        left: currentLayer.bounds._left,
+        bottom: currentLayer.bounds._bottom,
+        right: currentLayer.bounds._right
+    };
+    
+    await applyHorizontalPatch(h1, h2, newBounds);
+}
+
+// 가이드 얻기
 function getGuides(guides) {
-    // 가이드 얻기
-    const guideArray = [[],[]]; // [[방향, 좌표], [방향, 좌표], ...]
-    for (let i = 0; i < guides.length; i++) {
-        const guide = guides[i];
-        const g_direction = (guide.direction === "vertical") ? 0 : 1; // vertical = 0, horizontal = 1
-        const g_coordinate = guide.coordinate;
-        guideArray[g_direction].push(parseInt(g_coordinate));
+    const verticalGuides = [];
+    const horizontalGuides = [];
+
+    for (const guide of guides) {
+        const coordinate = parseInt(guide.coordinate);
+        guide.direction === "vertical" ? 
+            verticalGuides.push(coordinate) : 
+            horizontalGuides.push(coordinate);
     }
 
-    let v1 = Math.round(guideArray[0][0]);
-    let v2 = Math.round(guideArray[0][1]);
-    let h1 = Math.round(guideArray[1][0]);
-    let h2 = Math.round(guideArray[1][1]);
+    return [
+        verticalGuides.sort((a, b) => a - b),
+        horizontalGuides.sort((a, b) => a - b)
+    ];
+}
 
-    // 순서 재배열
-    if(v1 > v2) {
-        guideArray[0].shift();
-        guideArray[0].push(v1);
+// Symmetry 가이드 계산
+function calculateSymmetricGuides(guide, size) {
+    const center = size / 2;
+    return guide < center ? 
+        [guide, size - guide] : 
+        [size - guide, guide];
+}
+
+// 패치 함수
+async function patchMaker() {
+    try {
+        const doc = app.activeDocument;
+        const guides = doc.guides;
+
+        if (guides.length === 0) {
+            throw new Error('가이드가 없습니다. 패치 메이커를 실행하기 전에 가이드를 추가해주세요.');
+        }
+
+        await executeAsModal(async () => {
+            await selectLayerByName(doc.layers[0].name);
+            await setLayerName("Source");
+            await layerTrim();
+        });
+
+        const layer = doc.layers[0];
+        const bounds = {
+            top: layer.bounds._top,
+            left: layer.bounds._left,
+            bottom: layer.bounds._bottom,
+            right: layer.bounds._right
+        };
+
+        const [verticalGuides, horizontalGuides] = getGuides(guides);
+        const patchType = analyzePatchType(verticalGuides.length, horizontalGuides.length);
+        logger.info(`Applying patch type: ${patchType}`);
+
+        switch (patchType) {
+            case PATCH_TYPES.ALL:
+                await applyAllPatch(verticalGuides[0], verticalGuides[1], horizontalGuides[0], horizontalGuides[1], bounds);
+                break;
+                
+            case PATCH_TYPES.VERTICAL:
+                await applyVerticalPatch(verticalGuides[0], verticalGuides[1], bounds);
+                break;
+                
+            case PATCH_TYPES.HORIZONTAL:
+                await applyHorizontalPatch(horizontalGuides[0], horizontalGuides[1], bounds);
+                break;
+                
+            case PATCH_TYPES.VERTICAL_SYMMETRY: {
+                const [v1, v2] = calculateSymmetricGuides(verticalGuides[0], bounds.right - bounds.left);
+                await applyVerticalPatch(v1, v2, bounds);
+                break;
+            }
+                
+            case PATCH_TYPES.HORIZONTAL_SYMMETRY: {
+                const [h1, h2] = calculateSymmetricGuides(horizontalGuides[0], bounds.bottom - bounds.top);
+                await applyHorizontalPatch(h1, h2, bounds);
+                break;
+            }
+                
+            case PATCH_TYPES.ALL_SYMMETRY: {
+                const [v1, v2] = calculateSymmetricGuides(verticalGuides[0], bounds.right - bounds.left);
+                const [h1, h2] = calculateSymmetricGuides(horizontalGuides[0], bounds.bottom - bounds.top);
+                await applyAllPatch(v1, v2, h1, h2, bounds);
+                break;
+            }
+                
+            case PATCH_TYPES.MIXED_V2H1: {
+                const [h1, h2] = calculateSymmetricGuides(horizontalGuides[0], bounds.bottom - bounds.top);
+                await applyAllPatch(verticalGuides[0], verticalGuides[1], h1, h2, bounds);
+                break;
+            }
+                
+            case PATCH_TYPES.MIXED_V1H2: {
+                const [v1, v2] = calculateSymmetricGuides(verticalGuides[0], bounds.right - bounds.left);
+                await applyAllPatch(v1, v2, horizontalGuides[0], horizontalGuides[1], bounds);
+                break;
+            }
+        }
+
+        await executeAsModal(() => actionCommands("clearAllGuides"));
+
+    } catch (error) {
+        await handleError(error, 'patch_maker');
     }
-    if(h1 > h2) {
-        guideArray[1].shift();
-        guideArray[1].push(h1);
-    }
-    return guideArray
 }
 
 module.exports = {

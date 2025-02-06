@@ -50,7 +50,7 @@ async function docResizeCanvas(doc, size) {
     await doc.resizeCanvas(size, size);
 }
 
-async function docResizeImage(doc, size) {
+async function docResizeImage(doc, size, sampleMethodName) {
    await batchPlay(
        [{
            _obj: "imageSize",
@@ -68,7 +68,7 @@ async function docResizeImage(doc, size) {
            useHistogram: false,
            interpolation: {
                _enum: "interpolationType",
-               _value: "bicubicSharper"
+               _value: sampleMethodName
            }
        }],
        { synchronousExecution: true }

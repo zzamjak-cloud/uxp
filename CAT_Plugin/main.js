@@ -1,5 +1,8 @@
+// Photoshop 및 UXP 모듈
 const app = require("photoshop").app;
 const fs = require('uxp').storage.localFileSystem;
+
+// 사용자 정의 모듈
 const { speedSave } = require("./speedSave");
 const { appIconMaker, appIconPSDGenerate } = require("./appIconMaker");
 const { patchMaker } = require("./patchMaker");
@@ -7,54 +10,82 @@ const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
 const { savePngAndLinkToPSD } = require("./savePsdAndPng");
 const { getPath } = require("./getPath");
 const { renamerLayers } = require("./renamerLayers");
-const { makeDocImportEntry, exportLayersAsDocSize, exportLayersFromImportPSD } = require("./importExportLayers");
+const { makeDocImportEntry, exportLayersAsDocSize} = require("./importExportLayers");
 const { cleanPSD } = require("./cleanPSD");
-const { addGuide } = require("./addGuide");
-const { test } = require("./test");
+const { addGuide, addAllGuides } = require("./addGuide");
+const { applyGridLayout } = require("./applyGridLayout");
 const { clearHiddenEffects } = require("./clearHiddenEffects");
+const { convertImageToPath } = require("./convertImageToPath");
 
-// 포토샵을 통해 파일을 열때는 반드시 executeAsModal을 사용해야 한다.
-document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
-document.getElementById("appiconmaker").addEventListener("click", appIconMaker);
+// 경로 설정 객체
+const pathConfig = {
+    count: 2,
+    prefix: 'getPath',
+    handlers: {
+        get: getPath,
+        save: savePngAndLinkToPSD,
+        init: existSavePath
+    }
+};
+
+// Export
+// 경로 ID 생성 및 처리
+Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
+    const pathId = `${pathConfig.prefix}${num}`;
+    // 이벤트 리스너 등록
+    document.getElementById(pathId)
+        .addEventListener("click", () => pathConfig.handlers.get(pathId));
+    document.getElementById(`savePath${num}`)
+        .addEventListener("click", () => pathConfig.handlers.save(pathId));
+    document.addEventListener("DOMContentLoaded", () => pathConfig.handlers.init(pathId)); // 초기화
+});
+
+document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
+document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
+
+document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
+document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
-// document.getElementById("clearhiddeneffect").addEventListener("click", clearHiddenEffects);
 
+// Import
+document.getElementById("import64").addEventListener("click", () => { makeDocImportEntry(64) });
+document.getElementById("import128").addEventListener("click", () => { makeDocImportEntry(128) });
+document.getElementById("import256").addEventListener("click", () => { makeDocImportEntry(256) });
+document.getElementById("import512").addEventListener("click", () => { makeDocImportEntry(512) });
+document.getElementById("import1024").addEventListener("click", () => { makeDocImportEntry(1024) });
+
+// Layers Renamer
 document.getElementById("prefix").addEventListener("click", () => {renamerLayers("prefix")});
-document.getElementById("sufix").addEventListener("click", () => {renamerLayers("sufix")});
+document.getElementById("suffix").addEventListener("click", () => {renamerLayers("suffix")});
 document.getElementById("rename").addEventListener("click", () => {renamerLayers("rename")});
 document.getElementById("replace").addEventListener("click", () => {renamerLayers("replace")});
 document.getElementById("number").addEventListener("click", () => {renamerLayers("number")});
 document.getElementById("reversenumber").addEventListener("click", () => {renamerLayers("reversenumber")});
 document.getElementById("remove").addEventListener("click", () => {renamerLayers("remove")});
 
-document.getElementById("getPath1").addEventListener("click", () => { getPath('getPath1') });
-document.getElementById("savePath1").addEventListener("click", () => { savePngAndLinkToPSD('getPath1') });
-
-document.getElementById("getPath2").addEventListener("click", () => { getPath('getPath2') });
-document.getElementById("savePath2").addEventListener("click", () => { savePngAndLinkToPSD('getPath2') });
-
-document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
-document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
-
-document.getElementById("import64").addEventListener("click", () => { makeDocImportEntry(64) });
-document.getElementById("import128").addEventListener("click", () => { makeDocImportEntry(128) });
-document.getElementById("import256").addEventListener("click", () => { makeDocImportEntry(256) });
-document.getElementById("import512").addEventListener("click", () => { makeDocImportEntry(512) });
-
-document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
-document.getElementById("savecharacterallpsd").addEventListener("click", exportLayersFromImportPSD);
+// Etc
+document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
+document.getElementById("appiconmaker").addEventListener("click", () => appIconMaker("bicubicSharper"));
+document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
 document.getElementById("cleanpsd").addEventListener("click", cleanPSD);
-document.getElementById("vCenterGuide").addEventListener("click", () => { addGuide('vertical') });
-document.getElementById("hCenterGuide").addEventListener("click", () => { addGuide('horizontal') });
-document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
+document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
+document.getElementById("convertToPath").addEventListener("click", convertImageToPath);
 
-document.addEventListener("DOMContentLoaded", existSavePath("getPath1"));
-document.addEventListener("DOMContentLoaded", existSavePath("getPath2"));
+//Guide
+document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
 
-// 플러그인 로드시 getPath 버튼 정보 표기
-// 만약 기존에 연결해둔 것이 있다면, 그대로 표기
+// 확장 UI 처리
+document.addEventListener("DOMContentLoaded", () => {
+    expandUI("etcExpandableUI", "etcExpandButton", "ETC");
+    expandUI("layerRenameExpandableUI", "layerRenameExpandButton", "LAYERS RENAME");
+    expandUI("exportExpandableUI", "exportExpandButton", "EXPORT");
+    expandUI("importExpandableUI", "importExpandButton", "IMPORT");
+    expandUI("guideExpandableUI", "guideExpandButton", "GUIDE");
+});
+
+// 플러그인 로드시 getPath 버튼 정보 표기, 만약 기존에 연결해둔 것이 있다면, 그대로 표기
 async function existSavePath(id) {
     // console.log('getPath!!')
     // 데이터 폴더의 엔트리들 얻은 후 모든 파일 리스트 추출
@@ -90,14 +121,6 @@ async function existSavePath(id) {
         console.log(e.message);
     }
 }
-
-
-// 확장 UI 처리
-document.addEventListener("DOMContentLoaded", expandUI("etcExpandableUI", "etcExpandButton", "ETC"));
-document.addEventListener("DOMContentLoaded", expandUI("layerRenameExpandableUI", "layerRenameExpandButton", "LAYERS RENAME"));
-document.addEventListener("DOMContentLoaded", expandUI("exportExpandableUI", "exportExpandButton", "EXPORT"));
-document.addEventListener("DOMContentLoaded", expandUI("importExpandableUI", "importExpandButton", "IMPORT"));
-document.addEventListener("DOMContentLoaded", expandUI("guideExpandableUI", "guideExpandButton", "GUIDE"));
 
 function expandUI(ui_id, button_id, category_name) {
     const expandableUI = document.getElementById(ui_id);

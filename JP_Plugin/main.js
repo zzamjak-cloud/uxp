@@ -67,7 +67,8 @@ document.getElementById("remove").addEventListener("click", () => {renamerLayers
 
 // Etc
 document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
-document.getElementById("appiconmaker").addEventListener("click", appIconMaker);
+document.getElementById("appiconmaker").addEventListener("click", () => appIconMaker("bicubicSharper"));
+document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
 document.getElementById("cleanpsd").addEventListener("click", cleanPSD);
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 document.getElementById("convertToPath").addEventListener("click", convertImageToPath);

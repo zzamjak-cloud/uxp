@@ -6,114 +6,187 @@ const { createDoc, layerVisible, docDuplicate, docResizeCanvas, docResizeImage, 
 const { saveForWebPNG } = require("./lib/lib_export");
 const { createLay, setLayerName, layOpacity, makeGroup, moveLayer, setLocking } = require("./lib/lib_layer");
 const { setForegroundColor, fillColor, makeShape, setPathFinderType } = require("./lib/lib_tool");
+const { handleError } = require("./lib/errorHandler");
+const { Logger } = require("./lib/logger");
 
+const logger = new Logger('AppIconMaker');
 
-async function appIconMaker() {
+// 앱 아이콘 설정
+const APP_ICONS = {
+    ANDROID: {
+        name: "android",
+        sizes: [512, 432, 324, 216, 192, 162, 108, 144, 96, 81, 72, 48, 36]
+    },
+    IOS: {
+        name: "iOS",
+        sizes: [1024, 180, 167, 152, 144, 120, 114, 87, 80, 76, 72, 60, 58, 57, 40, 29, 20]
+    },
+    ANDROID_ADAPTIVE: {
+        name: "android(Adaptive)",
+        sizes: [432, 324, 216, 162, 108, 81]
+    }
+};
 
-    // 각 OS별 앱아이콘 사이즈 리스트
-       const aos_name = "android";
-       const aos_size = [512, 432, 324, 216, 192, 162, 108, 144, 96, 81, 72, 48, 36];
-       const ios_name = "iOS";
-       const ios_size = [1024, 180, 167, 152, 144, 120, 114, 87, 80, 76, 72, 60, 58, 57, 40, 29, 20];
-       const aos_adaptive_name = "android(Adaptive)"
-       const aos_adaptive_size = [432, 324, 216, 162, 108, 81];
-    
-    // 사용자로부터 저장폴더 권한획득
-       const save_folder_entry = await fs.getFolder();
-       const save_folder_path = save_folder_entry.nativePath;
-       
-    // 폴더생성 및 세션토큰 발행
-       const aos_folder_token = await createFolderToken(aos_name, save_folder_entry);
-       const ios_folder_token = await createFolderToken(ios_name, save_folder_entry);
-       const aos_adaptive_folder_token = await createFolderToken(aos_adaptive_name, save_folder_entry);
-    
-       // aos,ios 앱아이콘 추출
-       await iconMake(aos_name, aos_size, save_folder_path, aos_folder_token);
-       await iconMake(ios_name, ios_size, save_folder_path, ios_folder_token);
-       await adaptiveIconMake(aos_adaptive_name, "f", aos_adaptive_size, save_folder_path, aos_adaptive_folder_token);
-       await adaptiveIconMake(aos_adaptive_name, "b", aos_adaptive_size, save_folder_path, aos_adaptive_folder_token);
-       
-       showAlert("앱아이콘 제작 완료!");
-       console.log("앱아이콘 제작 완료!");
-}
-    
-async function iconMake(os_name, os_size, save_folder_path, folder_token) {
+// PSD 템플릿 설정
+const PSD_TEMPLATE = {
+    DOC_SIZE: 2048,
+    FRAME_SIZE: 1338,
+    FRAME_POSITION: {
+        TOP: 355,
+        LEFT: 355,
+        BOTTOM: 1693,
+        RIGHT: 1693
+    }
+};
+
+// 폴더 생성 및 파일 저장 준비
+async function prepareExportFolders() {
     try {
-        for (let i = 0; i < os_size.length; i++) {
-            const file_path = `${save_folder_path}/${os_name}/${os_name}_${os_size[i]}.png`;
-            const file_entry = await fs.createEntryWithUrl(`file:${file_path}`);
-            const file_token = await fs.createSessionToken(file_entry);
-            
-            const doc = app.activeDocument;
-            const doc_name = file_entry.name
-            // const doc_name = file_entry.name.replace(".png", "")
-    
-            await executeAsModal(() => {docDuplicate(doc, doc_name)}, {"commandName": "Duplicate document"});
-            const cur_doc = app.activeDocument;
-            await executeAsModal(() => {docResizeCanvas(cur_doc, 1332)}, {"commandName": "Resize Canvas"});
-            await executeAsModal(() => {docResizeImage(cur_doc, os_size[i])}, {"commandName": "Resize Image"});
-            await executeAsModal(() => {saveForWebPNG(doc_name, folder_token, file_token)}, {"commandName": "SaveForWeb PNG"});
-            await executeAsModal(() => {docCloseWithoutSaving(cur_doc)}, {"commandName": "Close"});
+        const saveFolder = await fs.getFolder();
+        if (!saveFolder) {
+            throw new Error('폴더가 선택되지 않았습니다.');
         }
+
+        const saveFolderPath = saveFolder.nativePath;
+        logger.info(`Selected save folder: ${saveFolderPath}`);
+
+        // 각 플랫폼별 폴더 생성
+        const folders = {
+            android: await createFolderToken(APP_ICONS.ANDROID.name, saveFolder),
+            ios: await createFolderToken(APP_ICONS.IOS.name, saveFolder),
+            adaptiveAndroid: await createFolderToken(APP_ICONS.ANDROID_ADAPTIVE.name, saveFolder)
+        };
+
+        return { saveFolderPath, folders };
+    } catch (error) {
+        throw new Error(`폴더 준비 실패: ${error.message}`);
+    }
+}
+
+// 아이콘 생성 및 저장
+async function generateIcon(size, folderPath, folderToken, platformName, sampleMethodName) {
+    try {
+        const fileName = `${platformName}_${size}.png`;
+        const filePath = `${folderPath}/${platformName}/${fileName}`;
+        const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`);
+        const fileToken = await fs.createSessionToken(fileEntry);
+        const doc = app.activeDocument;
+
+        await executeAsModal(async () => {
+            await docDuplicate(doc, fileName);
+            const curDoc = app.activeDocument;
+            await docResizeCanvas(curDoc, 1332);
+            await docResizeImage(curDoc, size, sampleMethodName);
+            await saveForWebPNG(fileName, folderToken, fileToken);
+            await docCloseWithoutSaving(curDoc);
+        });
+
+        logger.info(`Generated icon: ${fileName}`);
+    } catch (error) {
+        throw new Error(`아이콘 생성 실패 (${size}px): ${error.message}`);
+    }
+}
+
+// 적응형 아이콘 레이어 처리
+async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_name, sampleMethodName) {
+    try {
+        const fileName = `android_${size}_${layer_name}.png`;
+        const filePath = `${folderPath}/${APP_ICONS.ANDROID_ADAPTIVE.name}/${fileName}`;
+        const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`);
+        const fileToken = await fs.createSessionToken(fileEntry);
+        const doc = app.activeDocument;
+
+        await executeAsModal(async () => {
+            await docDuplicate(doc, fileName);
+            const curDoc = app.activeDocument;
+
+            // 레이어 표시/숨김 처리
+            for (const layer of curDoc.layers) {
+                await layerVisible(
+                    layer.name === layer_name ? "show" : "hide", 
+                    layer.name
+                );
+            }
+
+            await docResizeImage(curDoc, size, sampleMethodName);
+            await saveForWebPNG(fileName, folderToken, fileToken);
+            await docCloseWithoutSaving(curDoc);
+        });
+
+        logger.info(`Generated adaptive icon layer: ${fileName}`);
+    } catch (error) {
+        throw new Error(`적응형 아이콘 레이어 처리 실패 (${size}px): ${error.message}`);
+    }
+}
+
+// 앱 아이콘 생성 메인 함수
+async function appIconMaker(sampleMethodName) {
+    try {
+        logger.info('Starting app icon generation');
+        const { saveFolderPath, folders } = await prepareExportFolders();
+
+        // iOS 아이콘 생성
+        for (const size of APP_ICONS.IOS.sizes) {
+            await generateIcon(size, saveFolderPath, folders.ios, APP_ICONS.IOS.name, sampleMethodName);
+        }
+
+        // 안드로이드 일반 아이콘 생성
+        for (const size of APP_ICONS.ANDROID.sizes) {
+            await generateIcon(size, saveFolderPath, folders.android, APP_ICONS.ANDROID.name, sampleMethodName);
+        }
+
+        // 안드로이드 적응형 아이콘 생성
+        for (const size of APP_ICONS.ANDROID_ADAPTIVE.sizes) {
+            await processAdaptiveIconLayer(size, saveFolderPath, folders.adaptiveAndroid, "f", sampleMethodName);
+            await processAdaptiveIconLayer(size, saveFolderPath, folders.adaptiveAndroid, "b", sampleMethodName);
+        }
+
+        await showAlert("앱 아이콘 생성이 완료되었습니다!");
+        logger.info('App icon generation completed successfully');
 
     } catch (error) {
-        console.log(error);
+        await handleError(error, 'app_icon_maker');
     }
 }
 
-async function adaptiveIconMake(os_name, layer_name, os_size, save_folder_path, folder_token) {
-    for(let i = 0; i < os_size.length; i++) {
-        const file_path = `${save_folder_path}/${os_name}/android_${os_size[i]}_${layer_name}.png`;
-        const file_entry = await fs.createEntryWithUrl(`file:${file_path}`);
-        const file_token = await fs.createSessionToken(file_entry);
-
-        // Document 복제
-        const doc = app.activeDocument;
-        const doc_name = file_entry.name
-        await executeAsModal(() => {docDuplicate(doc, doc_name)}, {"commandName": "Duplicate document"});
-        
-        // 지정된 레이어만 활성화
-        const cur_doc = app.activeDocument;
-        const lays = cur_doc.layers;
-
-        for (let i = 0; i < lays.length; i++){
-            if (lays[i].name == layer_name) {
-            await executeAsModal(() => {layerVisible("show", lays[i].name)}, {"commandName": "Visible Layer"});
-            } else {
-            await executeAsModal(() => {layerVisible("hide", lays[i].name)}, {"commandName": "Visible Layer"});
-            }
-        }
-
-        await executeAsModal(() => {docResizeImage(cur_doc, os_size[i])}, {"commandName": "Resize Image"});
-        await executeAsModal(() => {saveForWebPNG(doc_name, folder_token, file_token)}, {"commandName": "SaveForWeb PNG"});
-        await executeAsModal(() => {docCloseWithoutSaving(cur_doc)}, {"commandName": "Close"});
-    }
-}
-
+// PSD 템플릿 생성
 async function appIconPSDGenerate() {
-    const docSize = 2048;
-    const frameSize = 1338;
+    try {
+        logger.info('Starting PSD template generation');
 
-    // TL좌표 : (355, 355) BR좌표 : (1693, 1693)
-    await executeAsModal(() => createDoc("Origin", docSize, docSize, 72, 'RGBColorMode', 'transparent')); // document 생성
-    const doc = app.activeDocument;
-    const layer = doc.layers[0];
-    console.log(layer.name);
+        await executeAsModal(async () => {
+            // 문서 생성
+            await createDoc(
+                "Origin", 
+                PSD_TEMPLATE.DOC_SIZE, 
+                PSD_TEMPLATE.DOC_SIZE, 
+                72, 
+                'RGBColorMode', 
+                'transparent'
+            );
 
-    // "b" 그룹 생성
-    await executeAsModal(async() => {
-        await makeGroup("b");
-        await createLay(doc);
-        await moveLayer('next');
-        await makeGroup("f");
-        await makeShape(0,0,0,'rectangle',355,355,1693,1693,0,0,0,0,false,0,0,0,0);
-        await moveLayer('next');
-        await setLayerName("Frame");
-        await setPathFinderType(1);
-        await layOpacity(50);
-        await setLocking(true);
-        
-    });
+            const { TOP, LEFT, BOTTOM, RIGHT } = PSD_TEMPLATE.FRAME_POSITION;
+
+            // 레이어 그룹 생성 및 구성
+            await makeGroup("b");
+            await createLay(app.activeDocument);
+            await moveLayer('next');
+            await makeGroup("f");
+
+            // 프레임 생성
+            await makeShape(0, 0, 0, 'rectangle', TOP, LEFT, BOTTOM, RIGHT, 0, 0, 0, 0, false, 0, 0, 0, 0);
+            await moveLayer('next');
+            await setLayerName("Frame");
+            await setPathFinderType(1);
+            await layOpacity(50);
+            await setLocking(true);
+        });
+
+        logger.info('PSD template generated successfully');
+
+    } catch (error) {
+        await handleError(error, 'psd_template_generator');
+    }
 }
 
 module.exports = {

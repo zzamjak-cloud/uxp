@@ -64,9 +64,9 @@ async function prepareExportFolders() {
 }
 
 // 아이콘 생성 및 저장
-async function generateIcon(size, folderPath, folderToken, platformName, suffix = '') {
+async function generateIcon(size, folderPath, folderToken, platformName, sampleMethodName) {
     try {
-        const fileName = `${platformName}_${size}${suffix}.png`;
+        const fileName = `${platformName}_${size}.png`;
         const filePath = `${folderPath}/${platformName}/${fileName}`;
         const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`);
         const fileToken = await fs.createSessionToken(fileEntry);
@@ -76,7 +76,7 @@ async function generateIcon(size, folderPath, folderToken, platformName, suffix 
             await docDuplicate(doc, fileName);
             const curDoc = app.activeDocument;
             await docResizeCanvas(curDoc, 1332);
-            await docResizeImage(curDoc, size);
+            await docResizeImage(curDoc, size, sampleMethodName);
             await saveForWebPNG(fileName, folderToken, fileToken);
             await docCloseWithoutSaving(curDoc);
         });
@@ -88,7 +88,7 @@ async function generateIcon(size, folderPath, folderToken, platformName, suffix 
 }
 
 // 적응형 아이콘 레이어 처리
-async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_name) {
+async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_name, sampleMethodName) {
     try {
         const fileName = `android_${size}_${layer_name}.png`;
         const filePath = `${folderPath}/${APP_ICONS.ANDROID_ADAPTIVE.name}/${fileName}`;
@@ -108,7 +108,7 @@ async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_nam
                 );
             }
 
-            await docResizeImage(curDoc, size);
+            await docResizeImage(curDoc, size, sampleMethodName);
             await saveForWebPNG(fileName, folderToken, fileToken);
             await docCloseWithoutSaving(curDoc);
         });
@@ -120,25 +120,25 @@ async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_nam
 }
 
 // 앱 아이콘 생성 메인 함수
-async function appIconMaker() {
+async function appIconMaker(sampleMethodName) {
     try {
         logger.info('Starting app icon generation');
         const { saveFolderPath, folders } = await prepareExportFolders();
 
         // iOS 아이콘 생성
         for (const size of APP_ICONS.IOS.sizes) {
-            await generateIcon(size, saveFolderPath, folders.ios, APP_ICONS.IOS.name);
+            await generateIcon(size, saveFolderPath, folders.ios, APP_ICONS.IOS.name, sampleMethodName);
         }
 
         // 안드로이드 일반 아이콘 생성
         for (const size of APP_ICONS.ANDROID.sizes) {
-            await generateIcon(size, saveFolderPath, folders.android, APP_ICONS.ANDROID.name);
+            await generateIcon(size, saveFolderPath, folders.android, APP_ICONS.ANDROID.name, sampleMethodName);
         }
 
         // 안드로이드 적응형 아이콘 생성
         for (const size of APP_ICONS.ANDROID_ADAPTIVE.sizes) {
-            await processAdaptiveIconLayer(size, saveFolderPath, folders.adaptiveAndroid, "f");
-            await processAdaptiveIconLayer(size, saveFolderPath, folders.adaptiveAndroid, "b");
+            await processAdaptiveIconLayer(size, saveFolderPath, folders.adaptiveAndroid, "f", sampleMethodName);
+            await processAdaptiveIconLayer(size, saveFolderPath, folders.adaptiveAndroid, "b", sampleMethodName);
         }
 
         await showAlert("앱 아이콘 생성이 완료되었습니다!");

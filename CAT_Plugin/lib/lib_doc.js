@@ -1,5 +1,15 @@
 const { batchPlay } = require("photoshop").action;
 
+const RESAMPLE_METHOD = {
+   AUTOMATIC: 'automaticInterpolation',
+   PRESERVE_DETAILS: 'preserveDetailsUpscale',  // 확대 시 디테일 유지
+   BICUBIC_SHARPER: 'bicubicSharper',          // 축소 시 선명하게
+   BICUBIC_SMOOTHER: 'bicubicSmoother',        // 확대 시 부드럽게
+   BICUBIC: 'bicubic',                         // 일반적인 용도
+   NEAREST_NEIGHBOR: 'nearestNeighbor',        // 픽셀아트 등에 적합
+   BILINEAR: 'bilinear'                        // 기본 보간법
+};
+
 // mode : "RGBColorMode", fill : "transparent"
 async function createDoc(name, width, height, resolution, mode, fill) {
     await app.createDocument({
@@ -40,8 +50,29 @@ async function docResizeCanvas(doc, size) {
     await doc.resizeCanvas(size, size);
 }
 
-async function docResizeImage(doc, size) {
-    await doc.resizeImage(size, size);
+async function docResizeImage(doc, size, sampleMethodName) {
+   await batchPlay(
+       [{
+           _obj: "imageSize",
+           constrainProportions: true,
+           width: {
+               _unit: "pixelsUnit",
+               _value: size
+           },
+           height: {
+               _unit: "pixelsUnit",
+               _value: size
+           },
+           interfaceIconFrameDimmed: false,
+           scaleStyles: true,
+           useHistogram: false,
+           interpolation: {
+               _enum: "interpolationType",
+               _value: sampleMethodName
+           }
+       }],
+       { synchronousExecution: true }
+   );
 }
 
 async function docCloseWithoutSaving(doc) {

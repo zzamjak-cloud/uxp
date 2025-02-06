@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="main.js"></script> 
     <link rel="stylesheet" href="style.css">   
 </head>
 <body>
@@ -46,13 +45,15 @@
         </div>
       </div>
 
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
       <div class="button-group-container">
         <div class="button-group">
 
-          <!-- Export AppIcon -->
-          <sp-action-button class="sp-icons-button" id="appiconmaker">
-            <sp-tooltip open placement="top" variant="info">AppIcon Generate</sp-tooltip>
-            <img src="./icons/appicon_light@1X.png">
+          <!-- Slice Patch -->
+          <sp-action-button class="sp-icons-button" id="patch">
+            <sp-tooltip open placement="top" variant="info">PNG SlicePatch</sp-tooltip>
+            <img src="./icons/patch_light@1X.png">
           </sp-action-button>
 
           <!-- Export PNG to all layers -->
@@ -61,11 +62,11 @@
             <img src="./icons/export_all_lays_light@1X.png">
           </sp-action-button>
 
-          <!-- Export all layers PNG from All PSD -->
+          <!-- Export all layers PNG from All PSD 
           <sp-action-button class="sp-icons-button" id="savecharacterallpsd">
             <sp-tooltip open placement="top" variant="info">Export AllLayersToPNG FromAllPSD</sp-tooltip>
             <img src="./icons/export_all_lays_import_psd_light@1X.png">
-          </sp-action-button>
+          </sp-action-button> -->
 
           <!-- Export JPG -->
           <sp-action-button class="sp-icons-button" id="saveforwebjpg">
@@ -81,6 +82,31 @@
 
         </div>
       </div>
+      
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- Sort Layers -->
+          <sp-action-button class="sp-icons-button" id="sortlayer">
+            <sp-tooltip open placement="top" variant="info">Sort AllLayers</sp-tooltip>
+            <img src="./icons/sort_light@1X.png">
+          </sp-action-button>
+
+          <!-- Sort Select Layers -->
+          <sp-action-button class="sp-icons-button" id="picksort">
+            <sp-tooltip open placement="top" variant="info">Sort SelectedLayers</sp-tooltip>
+            <img src="./icons/sort_pick_light@1X.png">
+          </sp-action-button>
+
+          <!-- Clear Hidden Effects -->
+          <sp-action-button class="sp-icons-button" id="clearHiddenFX">
+            <sp-tooltip open placement="top" variant="info">ClearHiddenFXs SelectedLayers </sp-tooltip>
+            <img src="./icons/clear_hiddenFX_light@1X.png">
+          </sp-action-button>
+          
+        </div>
+      </div>
+      
     </div>
    
   </section>
@@ -114,8 +140,41 @@
             <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>512
           </sp-action-button>
 
+          <!-- 1024x1024 도큐먼트에 선택한 폴더의 모든 PNG파일을 import -->
+          <sp-action-button class="sp-icons-button" id="import1024">
+            <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>1024
+          </sp-action-button>
+
         </div>
       </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+        <div class="input-container">
+          <div class="input-fields">
+              <div class="input-group">
+                  <sp-label for="gridWidth">Width</sp-label>
+                  <sp-textfield id="gridWidth" placeholder="100"></sp-textfield>
+              </div>
+              
+              <div class="input-group">
+                  <sp-label for="gridHeight">Height</sp-label>
+                  <sp-textfield id="gridHeight" placeholder="100"></sp-textfield>
+              </div>
+
+              <div class="input-group">
+                <sp-label for="gridColumn">Column</sp-label>
+                <sp-textfield id="gridColumn" placeholder="10"></sp-textfield>
+            </div>
+          </div>
+        </div>
+
+        <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+        <div class="button-group-container">
+          <sp-action-button class="sp-icons-button" id="applyGrid">Apply Grid</sp-action-button>
+        </div>
+
     </div>
   </section>
 
@@ -154,9 +213,9 @@
             <img src="./icons/rename_reversenumber_light@1X.png">
           </sp-action-button>
 
-          <!-- Sufix -->
-          <sp-action-button class="sp-icons-button" id="sufix">
-            <sp-tooltip open placement="top" variant="info">Sufix</sp-tooltip>
+          <!-- Suffix -->
+          <sp-action-button class="sp-icons-button" id="suffix">
+            <sp-tooltip open placement="top" variant="info">Suffix</sp-tooltip>
             <img src="./icons/rename_sufix_light@1X.png">
           </sp-action-button>
           
@@ -193,7 +252,7 @@
 
   <!-- 섹션 ETC -->
   <section class="filter">
-    <sp-action-button quiet size="s" id="etcExpandButton">ETC</sp-icon></sp-action-button>
+    <sp-action-button quiet size="s" id="etcExpandButton">ETC</sp-action-button>
       <div id="etcExpandableUI" class="expandable-ui">
         <!-------------------------------------------------------------------------------->
         <div class="button-group-container">
@@ -205,27 +264,16 @@
               <img src="./icons/appicon_PSD_light@1X.png">
             </sp-action-button>
 
-            <!-- Sort Layers -->
-            <sp-action-button class="sp-icons-button" id="sortlayer">
-              <sp-tooltip open placement="top" variant="info">Sort AllLayers</sp-tooltip>
-              <img src="./icons/sort_light@1X.png">
+            <!-- Export 일반 AppIcon -->
+            <sp-action-button class="sp-icons-button" id="appiconmaker">
+              <sp-tooltip open placement="top" variant="info">Normal AppIcon</sp-tooltip>
+              <img src="./icons/appicon_light@1X.png">
             </sp-action-button>
 
-            <!-- Sort Select Layers -->
-            <sp-action-button class="sp-icons-button" id="picksort">
-              <sp-tooltip open placement="top" variant="info">Sort SelectedLayers</sp-tooltip>
-              <img src="./icons/sort_pick_light@1X.png">
-            </sp-action-button>
-          </div>
-        </div>
-        <!-------------------------------------------------------------------------------->
-        <div class="button-group-container">
-          <div class="button-group">
-
-            <!-- Clear Hidden Effects -->
-            <sp-action-button class="sp-icons-button" id="clearHiddenFX">
-              <sp-tooltip open placement="top" variant="info">ClearHiddenFXs SelectedLayers </sp-tooltip>
-              <img src="./icons/clear_hiddenFX_light@1X.png">
+            <!-- Export 도트 AppIcon -->
+            <sp-action-button class="sp-icons-button" id="appiconmakerDot">
+              <sp-tooltip open placement="top" variant="info">Dot AppIcon</sp-tooltip>
+              <img src="./icons/appicon_light_dot@1X.png">
             </sp-action-button>
 
             <!-- PSD Cleaner -->
@@ -234,12 +282,12 @@
               <img src="./icons/psd_cleaner_light@1X.png">
             </sp-action-button>
 
-            <!-- Slice Patch -->
-            <sp-action-button class="sp-icons-button" id="patch">
-              <sp-tooltip open placement="top" variant="info">PNG SlicePatch</sp-tooltip>
-              <img src="./icons/patch_light@1X.png">
+            <!-- Convert Image Outline to Path -->
+            <sp-action-button class="sp-icons-button" id="convertToPath">
+              <sp-tooltip open placement="top" variant="info">ConvertToPath</sp-tooltip>
+              <img src="./icons/img_to_path@1x.png">
             </sp-action-button>
-
+            
           </div>
         </div>
       </div>
@@ -247,25 +295,28 @@
 
   <!-- 섹션 GUIDE -->
   <section class="filter">
-    <sp-action-button quiet size="s" id="guideExpandButton">GUIDE</sp-icon></sp-action-button>
+    <sp-action-button quiet size="s" id="guideExpandButton">GUIDE</sp-action-button>
     <div id="guideExpandableUI" class="expandable-ui">
 
-      <div class="button-group-container">
-        <div class="button-group">
-
-          <!-- Vertical Center Guide -->
-          <sp-action-button class="sp-icons-button" id="vCenterGuide">
-            <sp-tooltip open placement="top" variant="info">CreateGuide VerticalCenter</sp-tooltip>
-            <img src="./icons/guide_V_C_light@1X.png">
-          </sp-action-button>
-
-          <!-- Horizontal Center Guide -->
-          <sp-action-button class="sp-icons-button" id="hCenterGuide">
-            <sp-tooltip open placement="top" variant="info">CreateGuide HorizontalCenter</sp-tooltip>
-            <img src="./icons/guide_H_C_light@1X.png">
-          </sp-action-button>
-
+      <!-- 화면 나누기 기능 -->
+      <div class="input-container">
+        <div class="input-fields">
+            <div class="input-group">
+                <sp-label for="guideRows">Row</sp-label>
+                <sp-textfield id="guideRows" placeholder="2"></sp-textfield>
+            </div>
+            
+            <div class="input-group">
+                <sp-label for="guideCols">Column</sp-label>
+                <sp-textfield id="guideCols" placeholder="2"></sp-textfield>
+            </div>
         </div>
+      </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <div class="button-group-container">
+        <sp-action-button class="sp-icons-button" id="applyGuide">Apply Guide</sp-action-button>
       </div>
 
     </div>
@@ -274,6 +325,6 @@
 
   <!-- 테스트 버튼 -->
   
-
+  <script src="main.js"></script> 
 </body>
 </html>
