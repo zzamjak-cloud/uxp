@@ -49,12 +49,9 @@ document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
 
-// Import
-document.getElementById("import64").addEventListener("click", () => { makeDocImportEntry(64) });
-document.getElementById("import128").addEventListener("click", () => { makeDocImportEntry(128) });
-document.getElementById("import256").addEventListener("click", () => { makeDocImportEntry(256) });
-document.getElementById("import512").addEventListener("click", () => { makeDocImportEntry(512) });
-document.getElementById("import1024").addEventListener("click", () => { makeDocImportEntry(1024) });
+// Import extension_value '.psd' or '.png'
+document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
+document.getElementById("importPNG").addEventListener("click", () => { makeDocImportEntry('.png') });
 
 // Layers Renamer
 document.getElementById("prefix").addEventListener("click", () => {renamerLayers("prefix")});

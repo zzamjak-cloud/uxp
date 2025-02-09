@@ -188,33 +188,35 @@
     <sp-action-button quiet size="s" id="importExpandButton">IMPORT</sp-action-button>
     <div id="importExpandableUI" class="expandable-ui">
 
-      <!-- 에피소드 캐릭터 리소스 불러오기 -->
+      <!-- Import -->
+      <div class="input-container">
+        <div class="input-fields">
+            <div class="input-group">
+                <sp-label for="docWidth">Doc Width</sp-label>
+                <sp-textfield id="docWidth" placeholder="128"></sp-textfield>
+            </div>
+            
+            <div class="input-group">
+                <sp-label for="docHeight">Doc Height</sp-label>
+                <sp-textfield id="docHeight" placeholder="128"></sp-textfield>
+            </div>
+        </div>
+      </div>
+      <div> </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
       <div class="button-group-container">
         <div class="button-group">
 
-          <!-- 64x64 도큐먼트에 선택한 폴더의 모든 PNG파일을 import -->
-          <sp-action-button class="sp-icons-button" id="import64">
-            <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>64
+          <!-- 폴더 내부의 모든 PSD파일을 import -->
+          <sp-action-button class="sp-icons-button" id="importPSD">
+            <img src="./icons/export_all_lays_import_psd_light@1X.png">
           </sp-action-button>
 
-          <!-- 128x128 도큐먼트에 선택한 폴더의 모든 PNG파일을 import -->
-          <sp-action-button class="sp-icons-button" id="import128">
-            <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>128
-          </sp-action-button>
-
-          <!-- 256x256 도큐먼트에 선택한 폴더의 모든 PNG파일을 import -->
-          <sp-action-button class="sp-icons-button" id="import256">
-            <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>256
-          </sp-action-button>
-
-          <!-- 512x512 도큐먼트에 선택한 폴더의 모든 PNG파일을 import -->
-          <sp-action-button class="sp-icons-button" id="import512">
-            <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>512
-          </sp-action-button>
-
-          <!-- 1024x1024 도큐먼트에 선택한 폴더의 모든 PNG파일을 import -->
-          <sp-action-button class="sp-icons-button" id="import1024">
-            <sp-tooltip open placement="top" variant="info">ImportAll PSD</sp-tooltip>1024
+          <!-- 폴더 내부의 모든 PNG파일을 import -->
+          <sp-action-button class="sp-icons-button" id="importPNG">
+            <img src="./icons/export_all_lays_import_png_light@1X.png">
           </sp-action-button>
 
         </div>
@@ -222,30 +224,32 @@
 
       <sp-divider size="small" class="divider-spacing"></sp-divider>
 
-        <div class="input-container">
-          <div class="input-fields">
-              <div class="input-group">
-                  <sp-label for="gridWidth">Width</sp-label>
-                  <sp-textfield id="gridWidth" placeholder="100"></sp-textfield>
-              </div>
-              
-              <div class="input-group">
-                  <sp-label for="gridHeight">Height</sp-label>
-                  <sp-textfield id="gridHeight" placeholder="100"></sp-textfield>
-              </div>
-
-              <div class="input-group">
-                <sp-label for="gridColumn">Column</sp-label>
-                <sp-textfield id="gridColumn" placeholder="10"></sp-textfield>
+      <div class="input-container">
+        <div class="input-fields">
+            <div class="input-group">
+                <sp-label for="gridWidth">Width</sp-label>
+                <sp-textfield id="gridWidth" placeholder="100"></sp-textfield>
             </div>
+            
+            <div class="input-group">
+                <sp-label for="gridHeight">Height</sp-label>
+                <sp-textfield id="gridHeight" placeholder="100"></sp-textfield>
+            </div>
+
+            <div class="input-group">
+              <sp-label for="gridColumn">Column</sp-label>
+              <sp-textfield id="gridColumn" placeholder="10"></sp-textfield>
           </div>
         </div>
+      </div>
 
-        <sp-divider size="small" class="divider-spacing"></sp-divider>
+      <div> </div>
 
-        <div class="button-group-container">
-          <sp-action-button class="sp-icons-button" id="applyGrid">Apply Grid</sp-action-button>
-        </div>
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <div class="button-group-container">
+        <sp-action-button class="sp-icons-button" id="applyGrid">Apply Grid</sp-action-button>
+      </div>
 
     </div>
   </section>

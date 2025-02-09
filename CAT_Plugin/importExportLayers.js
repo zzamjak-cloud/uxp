@@ -9,9 +9,11 @@ const { Logger } = require("./lib/logger");
 
 const logger = new Logger('ImportExport');
 
-// 도큐먼트 생성 및 PSD 파일 임포트
-async function makeDocImportEntry(docSize) {
+// 도큐먼트 생성 및 PSD 파일 임포트 extension_value '.psd' or '.png'
+async function makeDocImportEntry(extension_value) {
     try {
+        const docSize_width = parseInt(document.getElementById('docWidth').value) || 128;
+        const docSize_height = parseInt(document.getElementById('docHeight').value) || 128;
         // 폴더 선택
         const folder = await fs.getFolder();
         if (!folder) {
@@ -21,7 +23,7 @@ async function makeDocImportEntry(docSize) {
         // PSD 파일 검색
         const entries = await folder.getEntries();
         const psdFiles = entries.filter(entry => 
-            !entry.isFolder && entry.name.toLowerCase().endsWith('.psd')
+            !entry.isFolder && entry.name.toLowerCase().endsWith(extension_value)
         );
 
         if (psdFiles.length === 0) {
@@ -32,7 +34,7 @@ async function makeDocImportEntry(docSize) {
         
         // 새 도큐먼트 생성
         await executeAsModal(async () => {
-            await createDoc("Imported_Assets", docSize, docSize, 72, "RGBColorMode", "transparent");
+            await createDoc("Imported_Assets", docSize_width, docSize_height, 72, "RGBColorMode", "transparent");
             const doc = app.activeDocument;
 
             // 첫 번째 레이어 제거용
