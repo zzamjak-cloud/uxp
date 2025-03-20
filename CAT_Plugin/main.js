@@ -43,7 +43,7 @@ Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
 document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
 document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
 
-document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
+//document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
 document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
