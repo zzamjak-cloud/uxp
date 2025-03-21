@@ -110,7 +110,7 @@ async function renamerLayers(actType) {
         // body붙이기
         if (actType === 'body') {
             for (const layer of actLays) {
-                let set_name = `${layer.name}body`
+                let set_name = `body`
                 await setName(layer.id, set_name)
             }
         }
@@ -118,7 +118,7 @@ async function renamerLayers(actType) {
         // arm붙이기
         if (actType === 'arm') {
             for (const layer of actLays) {
-                let set_name = `${layer.name}arm`
+                let set_name = `arm`
                 await setName(layer.id, set_name)
             }
         }
@@ -126,7 +126,7 @@ async function renamerLayers(actType) {
         // leg붙이기
         if (actType === 'leg') {
             for (const layer of actLays) {
-                let set_name = `${layer.name}leg`
+                let set_name = `leg`
                 await setName(layer.id, set_name)
             }
         }
@@ -134,7 +134,7 @@ async function renamerLayers(actType) {
         // foot 붙이기
         if (actType === 'foot') {
             for (const layer of actLays) {
-                let set_name = `${layer.name}foot`
+                let set_name = `foot`
                 await setName(layer.id, set_name)
             }
         }
@@ -142,7 +142,7 @@ async function renamerLayers(actType) {
         // hair 붙이기
         if (actType === 'hair') {
             for (const layer of actLays) {
-                let set_name = `${layer.name}hair`
+                let set_name = `hair`
                 await setName(layer.id, set_name)
             }
         }
