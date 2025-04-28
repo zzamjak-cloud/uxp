@@ -1,7 +1,28 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
-const { selectNoLays, selectByLayerID, getLayerInfo, clearLayerEffect } = require("./lib/lib_layer");
+const { selectNoLays, selectByLayerID, getLayerInfo } = require("./lib/lib_layer");
+
+async function clearSpecificEffect(effectType, index, layerId) {
+    await executeAsModal(async () => {
+        await batchPlay(
+            [{
+                _obj: "disableSingleFX",
+                _target: [{
+                    _ref: effectType,
+                    _index: index
+                }, {
+                    _ref: "layer",
+                    _id: layerId
+                }],
+                _options: {
+                    dialogOptions: "dontDisplay"
+                }
+            }],
+            { synchronousExecution: true }
+        );
+    }, { commandName: `Clear ${effectType} Effect` });
+}
 
 async function clearHiddenEffects() {
     try {
@@ -14,16 +35,11 @@ async function clearHiddenEffects() {
                 return;
             }
 
-            // 선택한 레이어들을 순회하면서 처리
             for (const layer of selectedLayers) {
                 if (!layer.locked) {
                     console.log(`Processing layer: ${layer.name}`);
-                    
-                    // 현재 레이어 선택
                     await selectNoLays();
                     await selectByLayerID(layer.id);
-                    
-                    // 이펙트 처리
                     await clearEffectsPerLayer(layer);
                 }
             }
@@ -35,7 +51,6 @@ async function clearHiddenEffects() {
 
 async function clearEffectsPerLayer(layer) {
     try {
-        // 레이어 정보 가져오기
         const layerInfo = await getLayerInfo(layer.id, app.activeDocument.id);
         if (!layerInfo[0].layerEffects) return;
 
@@ -44,15 +59,20 @@ async function clearEffectsPerLayer(layer) {
 
         for (const key of effectKeys) {
             if (key.endsWith('Multi')) {
-                // 멀티 이펙트 처리
                 const multiEffects = layerEffects[key];
                 if (Array.isArray(multiEffects)) {
-                    // 배열을 역순으로 순회 (인덱스 문제 방지)
-                    for (let i = multiEffects.length - 1; i >= 0; i--) {
+                    const baseEffectType = key.replace('Multi', '');
+                    
+                    // 각 효과를 개별적으로 처리
+                    for (let i = 0; i < multiEffects.length; i++) {
                         const effect = multiEffects[i];
                         if (effect.enabled === false && effect.present === true) {
-                            console.log(`Layer ${layer.name}: Removing disabled multi effect: ${effect._obj} at index ${i}`);
-                            await clearLayerEffect(effect._obj, i, layer.id);
+                            console.log(`Removing ${baseEffectType} at index ${i}`);
+                            try {
+                                await clearSpecificEffect(baseEffectType, i, layer.id);
+                            } catch (error) {
+                                console.error(`Failed to remove ${baseEffectType} at index ${i}:`, error);
+                            }
                         }
                     }
                 }
@@ -60,8 +80,12 @@ async function clearEffectsPerLayer(layer) {
                 // 단일 이펙트 처리
                 const effect = layerEffects[key];
                 if (effect.enabled === false && effect.present === true) {
-                    console.log(`Layer ${layer.name}: Removing disabled effect: ${key}`);
-                    await clearLayerEffect(key, 0, layer.id);
+                    console.log(`Removing single effect: ${key}`);
+                    try {
+                        await clearSpecificEffect(key, 0, layer.id);
+                    } catch (error) {
+                        console.error(`Failed to remove ${key}:`, error);
+                    }
                 }
             }
         }

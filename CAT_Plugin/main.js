@@ -10,12 +10,12 @@ const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
 const { savePngAndLinkToPSD } = require("./savePsdAndPng");
 const { getPath } = require("./getPath");
 const { renamerLayers } = require("./renamerLayers");
-const { makeDocImportEntry, exportLayersAsDocSize} = require("./importExportLayers");
+const { makeDocImportEntry, exportLayersAsDocSize, exportLayersFromImportPSD} = require("./importExportLayers");
 const { cleanPSD } = require("./cleanPSD");
 const { addGuide, addAllGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
-const { clearHiddenEffects } = require("./clearHiddenEffects");
-const { convertImageToPath } = require("./convertImageToPath");
+const { animationMatchLayers } = require("./animationMatchLayers");
+const { exportMarketScreenshot } = require("./exportMarketScreenshot");
 
 // 경로 설정 객체
 const pathConfig = {
@@ -42,12 +42,12 @@ Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
 
 document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
 document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
-
-//document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
 document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
+document.getElementById("savecharacterallpsd").addEventListener("click", exportLayersFromImportPSD);
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
+document.getElementById("exportMarketScreenshot").addEventListener("click", exportMarketScreenshot);
 
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
@@ -60,7 +60,6 @@ document.getElementById("rename").addEventListener("click", () => {renamerLayers
 document.getElementById("replace").addEventListener("click", () => {renamerLayers("replace")});
 document.getElementById("number").addEventListener("click", () => {renamerLayers("number")});
 document.getElementById("reversenumber").addEventListener("click", () => {renamerLayers("reversenumber")});
-document.getElementById("remove").addEventListener("click", () => {renamerLayers("remove")});
 
 // Etc
 document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
@@ -68,7 +67,8 @@ document.getElementById("appiconmaker").addEventListener("click", () => appIconM
 document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
 document.getElementById("cleanpsd").addEventListener("click", cleanPSD);
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
-document.getElementById("convertToPath").addEventListener("click", convertImageToPath);
+document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
+
 
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
@@ -119,6 +119,7 @@ async function existSavePath(id) {
     }
 }
 
+// 확장 UI 함수
 function expandUI(ui_id, button_id, category_name) {
     const expandableUI = document.getElementById(ui_id);
     const expandButton = document.getElementById(button_id);

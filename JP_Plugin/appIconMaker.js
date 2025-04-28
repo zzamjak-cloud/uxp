@@ -169,7 +169,7 @@ async function appIconPSDGenerate() {
 
             // 레이어 그룹 생성 및 구성
             await makeGroup("b");
-            await createLay(app.activeDocument);
+            await createLay();
             await moveLayer('next');
             await makeGroup("f");
 

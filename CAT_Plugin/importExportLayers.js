@@ -1,7 +1,7 @@
 const app = require('photoshop').app;
 const fs = require('uxp').storage.localFileSystem;
 const { executeAsModal } = require('photoshop').core;
-const { createDoc, layerVisible } = require("./lib/lib_doc");
+const { createDoc, layerVisible, docCloseWithoutSaving } = require("./lib/lib_doc");
 const { saveForWebPNG } = require("./lib/lib_export");
 const { createLay, relinkToFile, actionCommands, layTransform, deleteLayer, selectLayerByName } = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
@@ -44,7 +44,7 @@ async function makeDocImportEntry(extension_value) {
             for (const file of psdFiles) {
                 const token = await fs.createSessionToken(file);
                 
-                await createLay(doc);
+                await createLay();
                 await actionCommands("newPlacedLayer");
                 await relinkToFile(token);
                 await layTransform(100, 100);
@@ -163,7 +163,7 @@ async function exportLayersFromImportPSD() {
                 }
 
                 // 문서 닫기
-                await doc.close();
+                await docCloseWithoutSaving(doc);
             });
         }
 

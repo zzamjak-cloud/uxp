@@ -12,7 +12,6 @@ const RENAME_TYPES = {
     SUFFIX: 'suffix',        // 뒤에 텍스트 추가
     RENAME: 'rename',       // 이름 변경
     REPLACE: 'replace',     // 텍스트 대체
-    REMOVE: 'remove',       // 텍스트 제거
     NUMBER: 'number',       // 뒤에 숫자 추가
     REVERSE_NUMBER: 'reversenumber'  // 뒤에 역순 숫자 추가
 };
@@ -22,6 +21,10 @@ function validateInputs(type, text, replaceText = '') {
     const validTypes = Object.values(RENAME_TYPES);
     if (!validTypes.includes(type)) {
         throw new Error(`유효하지 않은 이름 변경 타입: ${type}`);
+    }
+
+    if (type === RENAME_TYPES.NUMBER || type === RENAME_TYPES.REVERSE_NUMBER) {
+        return;
     }
 
     if (type !== RENAME_TYPES.RENAME && !text) {
@@ -47,9 +50,6 @@ function generateNewName(layer, type, text, replaceText = '', index = 0, totalLa
 
         case RENAME_TYPES.REPLACE:
             return layer.name.replace(text, replaceText);
-
-        case RENAME_TYPES.REMOVE:
-            return layer.name.replace(text, '');
 
         case RENAME_TYPES.NUMBER: {
             const num = totalLayers - index;
@@ -101,10 +101,9 @@ async function renamerLayers(type) {
             logger.info(`Processing ${totalLayers} layers`);
 
             // 정순 또는 역순 처리
-            const layers = type === RENAME_TYPES.REVERSE_NUMBER ? 
-                [...actLays].reverse() : actLays;
+            //const layers = type === RENAME_TYPES.REVERSE_NUMBER ? [...actLays].reverse() : actLays;
 
-            for (const [index, layer] of layers.entries()) {
+            for (const [index, layer] of actLays.entries()) {
                 const newName = generateNewName(layer, type, text, replaceText, index, totalLayers);
                 await renameLayer(layer, newName);
                 processedCount++;

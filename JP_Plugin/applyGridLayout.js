@@ -1,32 +1,9 @@
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require('photoshop').action;
-const { 
-    selectByLayerID,
-    selectNoLays,
-    getLayerInfo 
-} = require('./lib/lib_layer');
+const { getCurrentLayerPosition, moveLayerOffset, selectByLayerID, selectNoLays } = require('./lib/lib_layer');
 
 const STARTING_POINT = 0;   // 전역변수 : 레이어정렬 시작포인트 (0,0)
-
-// 레이어의 현재 위치값을 리턴
-async function getCurrentLayerPosition(layer) {
-    const result = await batchPlay(
-        [{
-            _obj: "get",
-            _target: [
-                {
-                    _ref: "layer",
-                    _id: layer.id
-                }
-            ],
-            _options: { dialogOptions: "dontDisplay" }
-        }],
-        { synchronousExecution: true }
-    );
-    
-    return result[0].bounds;
-}
 
 // 레이어를 셀의 중심으로 이동
 async function moveLayerToPosition(layer, targetCenterX, targetCenterY) {
@@ -46,24 +23,8 @@ async function moveLayerToPosition(layer, targetCenterX, targetCenterY) {
         const moveX = targetLeft - currentBounds.left._value;
         const moveY = targetTop - currentBounds.top._value;
 
-        await batchPlay(
-            [{
-                _obj: "move",
-                _target: [{
-                    _ref: "layer",
-                    _id: layer.id
-                }],
-                to: {
-                    _obj: "offset",
-                    horizontal: { _unit: "pixelsUnit", _value: moveX },
-                    vertical: { _unit: "pixelsUnit", _value: moveY }
-                },
-                _options: {
-                    dialogOptions: "dontDisplay"
-                }
-            }],
-            { synchronousExecution: true }
-        );
+        // 레이어 이동
+        await executeAsModal(() => moveLayerOffset(layer, moveX, moveY));
 
     } catch(e) {
         console.error(`Error moving layer ${layer.name}:`, e);

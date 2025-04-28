@@ -1,30 +1,52 @@
 const { batchPlay } = require("photoshop").action;
 
-async function createLay(doc) {
-   await doc.createLayer();
-}
-
-async function setLayerName(layer_name) {
-   const action = {
-      _obj: "set",
-      _target: [
+// 신규 레이어 생성
+async function createLay() {
+   await batchPlay(
+      [
          {
-            _ref: "layer",
-            _enum: "ordinal",
-            _value: "targetEnum"
+            _obj: "make",
+            _target: [
+               {
+                  _ref: "layer"
+               }
+            ],
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
          }
       ],
-      to: {
-         _obj: "layer",
-         name: layer_name
-      },
-      _options: {
-         dialogOptions: "dontDisplay"
-      }
-   }
-   await batchPlay([action], {});
+      {}
+   );
 }
 
+// 레이어 이름 변경
+async function setLayerName(layer_name) {
+   await batchPlay(
+      [
+         {
+            _obj: "set",
+            _target: [
+               {
+                  _ref: "layer",
+                  _enum: "ordinal",
+                  _value: "targetEnum"
+               }
+            ],
+            to: {
+               _obj: "layer",
+               name: layer_name
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
+// 이름으로 레이어 선택
 async function selectLayerByName(layer_name) {
    await batchPlay(
       [
@@ -49,10 +71,11 @@ async function selectLayerByName(layer_name) {
    );
 }
 
+// 레이어 ID로 선택
 async function selectByLayerID(layerID) {
-   //  console.log("-------------------------");
-    try{
-        const action = {
+   await batchPlay(
+      [
+         {
             _obj: "select",
             _target: [
                {
@@ -65,17 +88,14 @@ async function selectByLayerID(layerID) {
                dialogOptions: "dontDisplay"
             }
          }
-        await batchPlay([action],{});
-        
-        // await batchPlay([actionDescriptor], {});
-        
-    } catch(e) {
-        console.log(e.message);
-    }
+      ],
+      {}
+   );
 }
 
+// 레이어 선택 추가
 async function addSelectLayer(layerID, layerID_array) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "select",
@@ -101,7 +121,7 @@ async function addSelectLayer(layerID, layerID_array) {
 }
 
 
-// "selectNoLayers"
+// 레이어 선택 해제
 async function selectNoLays() {
     await batchPlay(
        [
@@ -123,7 +143,7 @@ async function selectNoLays() {
     );
 }
 
-
+// 레이어 삭제
 async function deleteLayer() {
     await batchPlay(
        [
@@ -148,23 +168,32 @@ async function deleteLayer() {
     );
 }
 
+// 레이어 이동
 async function layerTranslate(layer, x, y) {
     await layer.translate(x, y);
 }
 
+// 레이어 트림
 async function layerTrim() {
-    const action = {
-        _obj: "trim",
-        trimBasedOn: {
-            _enum: "trimBasedOn",
-            _value: "transparency"
-        },
-        top: true, bottom: true, left: true, right: true,
-        _options: {
-            dialogOptions: "dontDisplay"
-        }
-    }
-    await batchPlay([action], {});
+   await batchPlay(
+      [
+         {
+            _obj: "trim",
+            trimBasedOn: {
+               _enum: "trimBasedOn",
+               _value: "transparency"
+            },
+            top: true,
+            bottom: true,
+            left: true,
+            right: true,
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
 }
 
 // "mergeVisible" : 레이어 머지
@@ -173,101 +202,133 @@ async function layerTrim() {
 // "placedLayerEditContents" : 스마트 오브젝트 편집 모드 진입하기
 // "newPlacedLayer" : 스마트 오브젝트 만들기
 async function actionCommands(command) {
-    const action = {
-        _obj: command,
-        _options: {
-            dialogOptions: "dontDisplay"
-        }
-    }
-
-    await batchPlay([action], {});
+   const result = await batchPlay(
+      [
+         {
+            _obj: command,
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+   return result;
 }
 
+// 파일 재연결
 async function relinkToFile(file_token) {
-    const action = {
-        _obj: "placedLayerRelinkToFile",
-        null: {
-        _path: file_token,
-        _kind: "local"
-        },
-        _options: {
-        dialogOptions: "dontDisplay"
-        }
-    }
-    await batchPlay([action], {});
- }
+   await batchPlay(
+      [
+         {
+            _obj: "placedLayerRelinkToFile",
+            null: {
+               _path: file_token,
+               _kind: "local"
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
 
 // move_action : "previous", "next", "front", "back"
 async function moveLayer(move_action) {
-
-   const action = {
-      _obj: "move",
-      _target: [{
-         _ref: "layer",
-         _enum: "ordinal",
-      }],
-      to: {
-         _ref: "layer",
-         _enum: "ordinal",
-         _value: move_action
-      },
-      _options: {
-      dialogOptions: "dontDisplay"
-      }
-   }
-   await batchPlay([action], {});
-
+   await batchPlay(
+      [
+         {
+            _obj: "move",
+            _target: [
+               {
+                  _ref: "layer",
+                  _enum: "ordinal",
+               }
+            ],
+            to: {
+               _ref: "layer",
+               _enum: "ordinal",
+               _value: move_action
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
 }
 
-// "placeBefore", "playceAfter", "placeInside"
+// element_place : "placeBefore", "playceAfter", "placeInside"
+// target_layer : 이동할 레이어 ID
 async function moveLayerTarget(layer, target_layer, element_place) {
-   layer.move(target_layer, "placeBefore");
+   layer.move(target_layer, element_place);
 }
 
+// 레이어 크기 조정
+// percent_value_width, percent_value_height : 0 ~ 100
 async function layTransform(percent_value_width, percent_value_height) {
-   const action = {
-      _obj: "transform",
-      freeTransformCenterState: {
-         _enum: "quadCenterState",
-         _value: "QCSAverage"
-      },
-      offset: {
-         _obj: "offset",
-         horizontal: {
-            _unit: "pixelsUnit",
-            _value: 0
-         },
-         vertical: {
-            _unit: "pixelsUnit",
-            _value: 0
+   await batchPlay(
+      [
+         {
+            _obj: "transform",
+            freeTransformCenterState: {
+               _enum: "quadCenterState",
+               _value: "QCSAverage"
+            },
+            offset: {
+               _obj: "offset",
+               horizontal: {
+                  _unit: "pixelsUnit",
+                  _value: 0
+               },
+               vertical: {
+                  _unit: "pixelsUnit",
+                  _value: 0
+               }
+            },
+            width: {
+               _unit: "percentUnit",
+               _value: percent_value_width
+            },
+            height: {
+               _unit: "percentUnit",
+               _value: percent_value_height
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
          }
-      },
-      width: {
-         _unit: "percentUnit",
-         _value: percent_value_width
-      },
-      height: {
-         _unit: "percentUnit",
-         _value: percent_value_height
-      },
-      replaceLayer: {
-         _obj: "transform",
-         from: {
-            _ref: "layer",
-            _id: 24
-         },
-         to: {
-            _ref: "layer",
-            _id: 24
-         }
-      },
-      _options: {
-         dialogOptions: "dontDisplay"
-      }
-   }
-   await batchPlay([action], {})
+      ],
+      {}
+   );
 }
 
+// 레이어 복제
+async function duplicateLayer(){
+   await batchPlay(
+      [
+         {
+            _obj: "duplicate",
+            _target: [
+               {
+                  _ref: "layer",
+                  _enum: "ordinal",
+                  _value: "targetEnum"
+               }
+            ],
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
+// 레이어 정보 얻기
 async function getLayerInfo(layerID, docID) {
    const result = await batchPlay(
       [
@@ -298,7 +359,7 @@ async function getLayerInfo(layerID, docID) {
 // color overlay : "solidFill", gradient overlay : "gradientFill", pattern overlay : "patternFill",
 // "outerGlow", "dropShadow"
 async function clearLayerEffect(layFX_key, idx, layerID) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "disableSingleFX",
@@ -323,8 +384,12 @@ async function clearLayerEffect(layFX_key, idx, layerID) {
    );
 }
 
+// 이펙트 재정렬
+// keyName : "bevelEmboss", stroke : "frameFX", "innerShadow", "innerGlow", satin : "chromeFX",
+// color overlay : "solidFill", gradient overlay : "gradientFill", pattern overlay : "patternFill",
+// "outerGlow", "dropShadow"
 async function reorderEffect(keyName, from_idx, to_idx) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "reorderFX",
@@ -349,8 +414,9 @@ async function reorderEffect(keyName, from_idx, to_idx) {
    );
 }
 
+// 그룹 생성
 async function makeGroup(groupName) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "make",
@@ -377,9 +443,10 @@ async function makeGroup(groupName) {
    );
 }
 
+// 투명도 설정
 // value : 0 ~ 100
 async function layOpacity(value) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "set",
@@ -406,9 +473,10 @@ async function layOpacity(value) {
    );
 }
 
+// 레이어 잠금 설정
 // value : true / false
 async function setLocking(value) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "applyLocking",
@@ -432,8 +500,9 @@ async function setLocking(value) {
    );
 }
 
+// 투명도 기반 레이어 영역 선택
 async function selectionForLayer() {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "set",
@@ -457,6 +526,8 @@ async function selectionForLayer() {
    );
 }
 
+// WorkPath 생성
+// value : 0 ~ 100
 async function makeWorkPath(value) {
    const result = await batchPlay(
       [
@@ -482,8 +553,10 @@ async function makeWorkPath(value) {
       ],
       {}
    );
+   return result;
 }
 
+// Shape 생성
 async function makeShape(layerID) {
    const result = await batchPlay(
       [
@@ -569,32 +642,85 @@ async function makeShape(layerID) {
       ],
       {}
    );
+   return result;
 }
 
+// 레이어의 현재 위치값을 리턴
+async function getCurrentLayerPosition(layer) {
+   const result = await batchPlay(
+       [{
+           _obj: "get",
+           _target: [
+               {
+                   _ref: "layer",
+                   _id: layer.id
+               }
+           ],
+           _options: { dialogOptions: "dontDisplay" }
+       }],
+       { synchronousExecution: true }
+   );
+   
+   return result[0].bounds;
+}
 
+// 레이어 이동
+async function moveLayerOffset(layer, x, y) {
+   await batchPlay(
+      [
+         {
+            _obj: "move",
+            _target: [
+               {
+                  _ref: "layer",
+                  _id: layer.id
+               }
+            ],
+            to: {
+               _obj: "offset",
+               horizontal: {
+                  _unit: "pixelsUnit",
+                  _value: x
+               },
+               vertical: {
+                  _unit: "pixelsUnit",
+                  _value: y
+               }
+            },
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
 
 module.exports = {
    actionCommands,
-   addSelectLayer,
-   clearLayerEffect,
-   createLay,
-   deleteLayer,
-   getLayerInfo,
-   layerTranslate,
-   layerTrim,
-   layTransform,
-   layOpacity,
-   makeGroup,
-   makeShape,
-   makeWorkPath,
-   moveLayer,
-   moveLayerTarget,
-   relinkToFile,
-   reorderEffect,
-   selectNoLays,
-   selectLayerByName,
-   selectByLayerID,
-   setLayerName,
-   setLocking,
-   selectionForLayer
+   addSelectLayer,      // 레이어 선택 추가
+   clearLayerEffect,    // 레이어 이펙트 제거
+   createLay,           // 신규 레이어 생성
+   deleteLayer,         // 레이어 삭제 
+   duplicateLayer,      // 레이어 복제
+   getLayerInfo,        // 레이어 정보 얻기
+   getCurrentLayerPosition, // 레이어의 현재 위치값을 리턴
+   layerTranslate,      // 레이어 이동
+   layerTrim,           // 레이어 트림
+   layTransform,        // 레이어 크기 조정
+   layOpacity,          // 투명도 설정
+   makeGroup,           // 그룹 생성
+   makeShape,           // Shape 생성
+   makeWorkPath,        // WorkPath
+   moveLayer,           // 레이어 인덱스 이동
+   moveLayerOffset,     // 레이어 오프셋 이동
+   moveLayerTarget,     // 레이어 타겟기준 인덱스 이동
+   relinkToFile,        // 파일 재연결
+   reorderEffect,       // 이펙트 재정렬
+   selectNoLays,        // 레이어 선택 해제
+   selectLayerByName,   // 이름으로 레이어 선택
+   selectByLayerID,     // 레이어 ID로 선택
+   setLayerName,        // 레이어 이름 변경
+   setLocking,          // 레이어 잠금 설정
+   selectionForLayer    // 투명도 기반 레이어 영역 선택
 };
