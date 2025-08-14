@@ -1,0 +1,105 @@
+{
+  "id": "choijinpyoung.work",
+  "name": "CAT Panel",
+  "version": "0.0.5",
+  "main": "index.html",
+  "host": {
+    "app": "PS",
+    "minVersion": "22.0.0",
+    "data": {
+      "apiVersion": 2
+    }
+  },
+  "manifestVersion": 5,
+  "requiredPermissions": {
+    "localFileSystem": "fullAccess"
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "vanilla",
+      "minimumSize": {
+        "width": 240,
+        "height": 200
+      },
+      "maximumSize": {
+        "width": 2000,
+        "height": 2000
+      },
+      "preferredDockedSize": {
+        "width": 240,
+        "height": 520
+      },
+      "preferredFloatingSize": {
+        "width": 240,
+        "height": 520
+      },
+      "icons": [
+        {
+          "width": 32,
+          "height": 32,
+          "path": "icons/cattool.png",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "dark",
+            "darkest"
+          ],
+          "species": [
+            "generic"
+          ]
+        },
+        {
+          "width": 32,
+          "height": 32,
+          "path": "icons/cattool.png",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "lightest",
+            "light"
+          ],
+          "species": [
+            "generic"
+          ]
+        }
+      ],
+      "label": {
+        "default": "CAT Tools"
+      }
+    }
+  ],
+  "icons": [
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/cattool.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "darkest",
+        "dark",
+        "medium"
+      ]
+    },
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/cattool.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "lightest",
+        "light"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="main.js"></script> 
+    <link rel="stylesheet" href="style.css">   
+</head>
+<body>
+
+  <!-- 섹션 Layers Renamer -->
+  <section class="filter">
+    <sp-action-button quiet size="s" id="layerRenameExpandButton">LAYERS RENAME</sp-action-button>
+    <div id="layerRenameExpandableUI" class="expandable-ui">
+
+      <!-- 텍스트 필드 -->
+      <div class="text-field-container">
+        <sp-textfield id="renameText" value="" placeholder="입력 텍스트"></sp-textfield>
+        <sp-textfield id="replaceText" value="" placeholder="대체 텍스트"></sp-textfield>
+      </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- Prefix -->
+          <sp-action-button class="sp-icons-button" id="prefix">
+            <sp-tooltip open placement="top" variant="info">Prefix</sp-tooltip>
+            <img src="./icons/rename_prefix_light@1X.png">
+          </sp-action-button>
+
+          <!-- Add Num -->
+          <sp-action-button class="sp-icons-button" id="number">
+            <sp-tooltip open placement="top" variant="info">Number</sp-tooltip>
+            <img src="./icons/rename_number_light@1X.png">
+          </sp-action-button>
+
+          <!-- Add Reverse Num -->
+          <sp-action-button class="sp-icons-button" id="reversenumber">
+            <sp-tooltip open placement="top" variant="info">ReverseNum</sp-tooltip>
+            <img src="./icons/rename_reversenumber_light@1X.png">
+          </sp-action-button>
+
+          <!-- Sufix -->
+          <sp-action-button class="sp-icons-button" id="sufix">
+            <sp-tooltip open placement="top" variant="info">Sufix</sp-tooltip>
+            <img src="./icons/rename_sufix_light@1X.png">
+          </sp-action-button>
+          
+        </div>
+      </div>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- Rename -->
+          <sp-action-button class="sp-icons-button" id="rename">
+            <sp-tooltip open placement="top" variant="info">Rename</sp-tooltip>
+            <img src="./icons/renameText_light@1X.png">
+          </sp-action-button>
+
+          <!-- Replace -->
+          <sp-action-button class="sp-icons-button" id="replace">
+            <sp-tooltip open placement="top" variant="info">Replace</sp-tooltip>
+            <img src="./icons/replaceText_light@1X.png">
+          </sp-action-button>
+
+        </div>
+      </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- [ignore] 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixignore">
+            <sp-tooltip open placement="top" variant="info">[ignore]</sp-tooltip>Igr
+          </sp-action-button>
+
+          <!-- [folder] 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixfolder">
+            <sp-tooltip open placement="top" variant="info">[folder]</sp-tooltip>Fol
+          </sp-action-button>
+
+          <!-- [origin] 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixorigin">
+            <sp-tooltip open placement="top" variant="info">[origin]</sp-tooltip>Org
+          </sp-action-button>
+
+          <!-- [merge] 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixmerge">
+            <sp-tooltip open placement="top" variant="info">[merge]</sp-tooltip>Mer
+          </sp-action-button>
+
+        </div>
+      </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- head 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixhead">
+            head
+          </sp-action-button>
+
+          <!-- body 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixbody">
+            body
+          </sp-action-button>
+
+          <!-- arm 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixarm">
+            arm
+          </sp-action-button>
+
+          <!-- leg 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixleg">
+            leg
+          </sp-action-button>
+
+        </div>
+      </div>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- hair 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixhair">
+            hair
+          </sp-action-button>
+
+          <!-- hand 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixhand">
+            hand
+          </sp-action-button>
+
+          <!-- foot 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixfoot">
+            foot
+          </sp-action-button>
+
+        </div>
+      </div>
+      
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- F 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixf">
+            F
+          </sp-action-button>
+
+          <!-- B 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixb">
+            B
+          </sp-action-button>
+
+          <!-- R 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixr">
+            R
+          </sp-action-button>
+
+          <!-- L 추가 -->
+          <sp-action-button class="sp-icons-button" id="prefixl">
+            L
+          </sp-action-button>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+  
+</body>
+</html>
