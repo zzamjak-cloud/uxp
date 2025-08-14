@@ -1,2 +1,0 @@
-# uxp
-Make PS Plugin
