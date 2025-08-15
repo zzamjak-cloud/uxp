@@ -44,23 +44,31 @@
         </div>
       </div>
 
-      <sp-divider size="small" class="divider-spacing"></sp-divider>
-
+      <!-- PNG 저장 폴더 설정 -->
       <div class="button-group-container">
         <div class="button-group">
 
-          <!-- Export PNG to selected layers -->
-          <sp-action-button class="sp-icons-button" id="saveselctedlayer">
-            <sp-tooltip open placement="top" variant="info">SelLayersToPNG</sp-tooltip>
+          <!-- get folder -->
+          <sp-action-button class="small-button" id="getPath3">
+            <sp-icon class="icon" name="ui:FolderBreadcrumb"></sp-icon></sp-action-button>
+
+          <!-- export psd & png -->
+          <sp-action-button class="sp-icons-button" id="savePath3">
+            <sp-tooltip open placement="top" variant="info">Export PNG&PSD</sp-tooltip>
             <img src="./icons/export_all_lays_import_png_light@1X.png">
           </sp-action-button>
-        </div>
 
-        <!-- 문서 크기 유지 옵션 체크박스 -->
-        <div class="checkbox-inline">
-          <sp-checkbox id="maintainDocSize">Doc Size</sp-checkbox>
         </div>
       </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
+
+      <!-- 문서 크기 유지 옵션 체크박스 -->
+      <div class="checkbox-container">
+        <sp-checkbox id="maintainDocSize">Keep Doc Size</sp-checkbox>
+      </div>
+
+      <sp-divider size="small" class="divider-spacing"></sp-divider>
       
       <div class="button-group-container">
         <div class="button-group">

@@ -47,7 +47,7 @@ body {
   white-space: nowrap;
 }
 
-/* 기존 체크박스 컨테이너 스타일 (사용하지 않지만 유지) */
+/* 기존 체크박스 컨테이너 스타일 */
 .checkbox-container {
   display: flex;
   justify-content: center;
@@ -57,7 +57,7 @@ body {
 
 .checkbox-container sp-checkbox {
   color: rgb(233, 233, 233);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* 입력 필드 스타일 */

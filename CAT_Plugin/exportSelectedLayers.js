@@ -4,7 +4,7 @@ const { executeAsModal } = require('photoshop').core;
 const { showAlert } = require('./lib/lib');
 const { createDoc, docCloseWithoutSaving, layerVisible } = require('./lib/lib_doc');
 const { saveForWebPNG, saveAsPSD } = require('./lib/lib_export');
-const { createLay, selectByLayerID, selectNoLays, duplicateLayer, moveLayer } = require('./lib/lib_layer');
+const { createLay, selectByLayerID, selectNoLays, layerTrim, duplicateLayer, moveLayer } = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { Logger } = require('./lib/logger');
 
@@ -14,11 +14,15 @@ const logger = new Logger('ExportSelectedToPSD');
  * 선택된 그룹 또는 스마트 오브젝트를 새 문서로 내보내기
  * @param {string} pathId - 저장 경로 ID (getPath3)
  */
-async function exportSelectedToPSD(pathId) {
+async function exportSelectedFile(pathId, fileType) {
     try {
         // 현재 문서 및 선택된 레이어 확인
         const originalDoc = app.activeDocument;
         const selectedLayers = [...originalDoc.activeLayers]; // 배열 복사로 안정성 확보
+
+        // 체크박스 상태 확인 (문서 크기 유지 옵션)
+        const maintainDocSizeCheckbox = document.getElementById('maintainDocSize');
+        const maintainDocumentSize = maintainDocSizeCheckbox ? maintainDocSizeCheckbox.checked : false;
 
         if (selectedLayers.length === 0) {
             throw new Error('내보낼 레이어를 선택해주세요.');
@@ -50,7 +54,7 @@ async function exportSelectedToPSD(pathId) {
             const layer = validLayers[i];
             try {
                 logger.info(`Processing ${i + 1}/${validLayers.length}: ${layer.name}`);
-                await processLayer(layer, originalDoc, saveFolder);
+                await processLayer(layer, originalDoc, saveFolder, fileType, maintainDocumentSize);
                 successCount++;
                 logger.info(`✅ Successfully processed: ${layer.name}`);
             } catch (error) {
@@ -83,7 +87,7 @@ async function exportSelectedToPSD(pathId) {
 /**
  * 개별 레이어 처리
  */
-async function processLayer(layer, originalDoc, saveFolder) {
+async function processLayer(layer, originalDoc, saveFolder, fileType, maintainDocumentSize) {
     try {
         logger.info(`Processing layer: ${layer.name} (ID: ${layer.id})`);
 
@@ -93,7 +97,7 @@ async function processLayer(layer, originalDoc, saveFolder) {
         }
 
         await executeAsModal(async () => {
-            await copyLayerToNewDocument(layer, originalDoc, saveFolder);
+            await copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, maintainDocumentSize);
         }, { 
             commandName: `Export ${layer.name}`,
             historyStateInfo: {
@@ -123,7 +127,7 @@ async function processLayer(layer, originalDoc, saveFolder) {
 /**
  * 레이어를 새 문서로 복사하고 저장
  */
-async function copyLayerToNewDocument(layer, originalDoc, saveFolder) {
+async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, maintainDocumentSize) {
     const { batchPlay } = require('photoshop').action;
     let newDoc = null;
     
@@ -164,14 +168,20 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder) {
 
         logger.info(`Created new document: ${newDoc.name} (ID: ${newDoc.id})`);
 
-        // 4. 파일 저장
-        await saveFiles(newDoc, layer.name, saveFolder);
+        // 4. 문서 크기 유지 옵션에 따른 처리
+        if (!maintainDocumentSize) {
+            // 트림 모드: 레이어 경계에 맞춰 자르기
+            await layerTrim();
+        }
 
-        // 5. 새 문서 닫기
+        // 5. 파일 저장
+        await saveFiles(newDoc, layer.name, saveFolder, fileType);
+
+        // 6. 새 문서 닫기
         logger.info(`Closing new document: ${newDoc.name}`);
         await docCloseWithoutSaving(newDoc);
 
-        // 6. 원본 문서로 안전하게 복귀
+        // 7. 원본 문서로 안전하게 복귀
         app.activeDocument = originalDoc;
         logger.info(`Returned to original document: ${originalDoc.name}`);
 
@@ -202,27 +212,38 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder) {
 /**
  * PSD 및 PNG 파일 저장
  */
-async function saveFiles(doc, layerName, saveFolder) {
+async function saveFiles(doc, layerName, saveFolder, fileType) {
     try {
         const sanitizedName = sanitizeFileName(layerName);
         
-        // PSD 저장
-        const psdFileName = `${sanitizedName}.psd`;
-        const psdFilePath = `${saveFolder.folderPath}/${psdFileName}`;
-        const psdFileEntry = await fs.createEntryWithUrl(`file:${psdFilePath}`, { overwrite: true });
-        const psdFileToken = await fs.createSessionToken(psdFileEntry);
-        
-        await saveAsPSD(psdFileToken);
-        logger.info(`Saved PSD: ${psdFileName}`);
+        if (fileType === 'psd') {
+            // PSD 저장
+            const psdFileName = `${sanitizedName}.psd`;
+            const psdFilePath = `${saveFolder.folderPath}/${psdFileName}`;
+            const psdFileEntry = await fs.createEntryWithUrl(`file:${psdFilePath}`, { overwrite: true });
+            const psdFileToken = await fs.createSessionToken(psdFileEntry);
+            
+            await saveAsPSD(psdFileToken);
+            logger.info(`Saved PSD: ${psdFileName}`);
 
-        // PNG 저장
-        const pngFileName = `${sanitizedName}.png`;
-        const pngFilePath = `${saveFolder.folderPath}/${pngFileName}`;
-        const pngFileEntry = await fs.createEntryWithUrl(`file:${pngFilePath}`, { overwrite: true });
-        const pngFileToken = await fs.createSessionToken(pngFileEntry);
-        
-        await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
-        logger.info(`Saved PNG: ${pngFileName}`);
+            // PNG 저장
+            const pngFileName = `${sanitizedName}.png`;
+            const pngFilePath = `${saveFolder.folderPath}/${pngFileName}`;
+            const pngFileEntry = await fs.createEntryWithUrl(`file:${pngFilePath}`, { overwrite: true });
+            const pngFileToken = await fs.createSessionToken(pngFileEntry);
+            
+            await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
+            logger.info(`Saved PNG: ${pngFileName}`);
+        } else if (fileType === 'png') {
+            // PNG 저장
+            const pngFileName = `${sanitizedName}.png`;
+            const pngFilePath = `${saveFolder.folderPath}/${pngFileName}`;
+            const pngFileEntry = await fs.createEntryWithUrl(`file:${pngFilePath}`, { overwrite: true });
+            const pngFileToken = await fs.createSessionToken(pngFileEntry);
+            
+            await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
+            logger.info(`Saved PNG: ${pngFileName}`);
+        }
 
     } catch (error) {
         throw new Error(`파일 저장 실패: ${error.message}`);
@@ -267,5 +288,5 @@ function sanitizeFileName(fileName) {
 }
 
 module.exports = {
-    exportSelectedToPSD
+    exportSelectedFile
 };

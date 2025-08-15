@@ -4,7 +4,7 @@ const fs = require('uxp').storage.localFileSystem;
 
 // 사용자 정의 모듈
 const { speedSave } = require("./speedSave");
-const { exportSelectedToPSD } = require("./exportSelectedToPSD");
+const { exportSelectedFile } = require("./exportSelectedLayers");
 const { appIconMaker, appIconPSDGenerate } = require("./appIconMaker");
 const { patchMaker } = require("./patchMaker");
 const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
@@ -22,7 +22,7 @@ const { animationMatchLayers } = require("./animationMatchLayers");
 
 // 경로 설정 객체
 const pathConfig = {
-    count: 2,
+    count: 3,
     prefix: 'getPath',
     handlers: {
         get: getPath,
@@ -42,10 +42,13 @@ Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
     
     // savePath 버튼들 - 조건부 처리 추가
     if (num === 2) {
-        // savePath3는 새로운 exportSelectedToPSD 함수 사용
+        // savePath2는 새로운 exportSelectedToPSD 함수 사용
         document.getElementById(`savePath${num}`)
-            .addEventListener("click", () => exportSelectedToPSD(pathId));
-    } else {
+            .addEventListener("click", () => exportSelectedFile(pathId, 'psd'));
+    } else if(num === 3){
+        document.getElementById(`savePath${num}`)
+            .addEventListener("click", () => exportSelectedFile(pathId, 'png'));
+    }else {
         // savePath1, savePath2는 기존 함수 사용
         document.getElementById(`savePath${num}`)
             .addEventListener("click", () => pathConfig.handlers.save(pathId));
@@ -57,11 +60,6 @@ Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
 
 document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
 document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
-
-//document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
-//document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
-//document.getElementById("savecharacterallpsd").addEventListener("click", exportLayersFromImportPSD);
-document.getElementById("saveselctedlayer").addEventListener("click", exportOnlySelectedLayers);
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
