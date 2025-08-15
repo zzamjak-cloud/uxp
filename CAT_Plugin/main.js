@@ -59,7 +59,7 @@ document.getElementById("saveforwebpng").addEventListener("click", () => { speed
 document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
 
 //document.getElementById("clearHiddenFX").addEventListener("click", clearHiddenEffects);
-document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
+//document.getElementById("savecharacter").addEventListener("click", exportLayersAsDocSize);
 //document.getElementById("savecharacterallpsd").addEventListener("click", exportLayersFromImportPSD);
 document.getElementById("saveselctedlayer").addEventListener("click", exportOnlySelectedLayers);
 document.getElementById("patch").addEventListener("click", patchMaker);
