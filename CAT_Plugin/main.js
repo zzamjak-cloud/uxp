@@ -11,13 +11,10 @@ const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
 const { savePngAndLinkToPSD } = require("./savePsdAndPng");
 const { getPath } = require("./getPath");
 const { renamerLayers } = require("./renamerLayers");
-const { makeDocImportEntry, exportLayersAsDocSize, exportLayersFromImportPSD, exportOnlySelectedLayers} = require("./importExportLayers");
+const { makeDocImportEntry} = require("./importFiles");
 const { cleanPSD } = require("./cleanPSD");
-const { addGuide, addAllGuides } = require("./addGuide");
+const { addAllGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
-//const { clearHiddenEffects } = require("./clearHiddenEffects");
-//const { convertImageToPath } = require("./convertImageToPath");
-//const { exportMarketScreenshot } = require("./exportMarketScreenshot");
 const { animationMatchLayers } = require("./animationMatchLayers");
 
 // 경로 설정 객체
@@ -63,7 +60,6 @@ document.getElementById("saveforwebjpg").addEventListener("click", () => { speed
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
-//document.getElementById("exportMarketScreenshot").addEventListener("click", exportMarketScreenshot);
 
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
@@ -83,7 +79,6 @@ document.getElementById("appiconmaker").addEventListener("click", () => appIconM
 document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
 document.getElementById("cleanpsd").addEventListener("click", cleanPSD);
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
-//document.getElementById("convertToPath").addEventListener("click", convertImageToPath);
 document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
 
 //Guide
