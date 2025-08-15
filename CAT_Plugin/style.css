@@ -34,17 +34,17 @@ body {
   cursor: pointer;
 }
 
-/* 체크박스 컨테이너 스타일 */
-.checkbox-container {
+/* 인라인 체크박스 스타일 */
+.checkbox-inline {
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin: 8px 0;
+  margin-left: 8px;
 }
 
-.checkbox-container sp-checkbox {
+.checkbox-inline sp-checkbox {
   color: rgb(233, 233, 233);
-  font-size: 12px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 /* 입력 필드 스타일 */
