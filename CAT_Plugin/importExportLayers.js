@@ -1,10 +1,11 @@
 const app = require('photoshop').app;
 const fs = require('uxp').storage.localFileSystem;
 const { executeAsModal } = require('photoshop').core;
-const { createDoc, layerVisible, docCloseWithoutSaving } = require("./lib/lib_doc");
+const { createDoc, layerVisible, docCloseWithoutSaving, createDocCopyLayers } = require("./lib/lib_doc");
 const { saveForWebPNG } = require("./lib/lib_export");
-const { createLay, relinkToFile, actionCommands, layTransform, deleteLayer, selectLayerByName } = require("./lib/lib_layer");
+const { createLay, relinkToFile, actionCommands, layTransform, deleteLayer, selectLayerByName, selectNoLays, selectByLayerID, layerTrim } = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
+const { showAlert } = require("./lib/lib");
 const { Logger } = require("./lib/logger");
 
 const logger = new Logger('ImportExport');
@@ -67,7 +68,7 @@ async function makeDocImportEntry(extension_value) {
     }
 }
 
-// 선택한 레이어만 PNG로 추출
+// 향상된 선택 레이어 PNG 내보내기 (문서 크기 유지 옵션 포함)
 async function exportOnlySelectedLayers() {
     try {
         const folder = await fs.getFolder();
@@ -76,37 +77,178 @@ async function exportOnlySelectedLayers() {
         }
 
         const folderToken = await fs.createSessionToken(folder);
-
-        const actLays = app.activeDocument.activeLayers;
-        if (actLays.length === 0) {
+        const originalDoc = app.activeDocument;
+        const selectedLayers = originalDoc.activeLayers;
+        
+        if (selectedLayers.length === 0) {
             throw new Error('선택된 레이어가 없습니다.');
         }
 
+        // 체크박스 상태 확인 (문서 크기 유지 옵션)
+        const maintainDocSizeCheckbox = document.getElementById('maintainDocSize');
+        const maintainDocumentSize = maintainDocSizeCheckbox ? maintainDocSizeCheckbox.checked : false;
+
+        logger.info(`Processing ${selectedLayers.length} selected layers`);
+        logger.info(`Maintain document size: ${maintainDocumentSize}`);
+
+        let successCount = 0;
+        let failCount = 0;
+
         await executeAsModal(async () => {
-            // 모든 레이어 숨기기
-            for (const layer of actLays) {
-                await layerVisible("hide", layer.name);
+            // 각 선택된 레이어별로 개별 처리
+            for (const layer of selectedLayers) {
+                try {
+                    // 1. 원본 문서로 돌아가기
+                    app.activeDocument = originalDoc;
+                    
+                    // 2. 현재 레이어만 선택
+                    await selectNoLays();
+                    await selectByLayerID(layer.id);
+                    
+                    // 3. 새 문서에 레이어 복사
+                    await createDocCopyLayers(`${layer.name}_export`);
+                    const newDoc = app.activeDocument;
+                    
+                    // 4. 문서 크기 유지 옵션에 따른 처리
+                    if (!maintainDocumentSize) {
+                        // 트림 모드: 레이어 경계에 맞춰 자르기
+                        await layerTrim();
+                    }
+                    // maintainDocumentSize가 true면 트림하지 않음 (원본 문서 크기와 위치 유지)
+                    
+                    // 5. PNG 파일로 저장
+                    const fileName = `${layer.name}.png`;
+                    const filePath = `${folder.nativePath}/${fileName}`;
+                    const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`, { overwrite: true });
+                    const fileToken = await fs.createSessionToken(fileEntry);
+                    
+                    await saveForWebPNG(fileEntry.name, folderToken, fileToken);
+                    
+                    // 6. 새 문서 닫기 (저장하지 않음)
+                    await docCloseWithoutSaving(newDoc);
+                    
+                    successCount++;
+                    logger.info(`Exported: ${fileName} ${maintainDocumentSize ? '(document size)' : '(trimmed)'}`);
+                    
+                } catch (layerError) {
+                    failCount++;
+                    console.error(`Error exporting layer ${layer.name}:`, layerError);
+                    
+                    // 오류 발생 시 열려있는 임시 문서가 있다면 닫기
+                    try {
+                        if (app.activeDocument && app.activeDocument.name !== originalDoc.name) {
+                            await docCloseWithoutSaving(app.activeDocument);
+                        }
+                    } catch (cleanupError) {
+                        console.error('Cleanup error:', cleanupError);
+                    }
+                }
             }
+            
+            // 7. 원본 문서로 최종 복귀
+            app.activeDocument = originalDoc;
+            
+        }, { commandName: "Export Selected Layers to PNG" });
 
-            // 각 레이어별로 PNG 추출
-            for (const layer of actLays) {
-                const fileName = `${layer.name}.png`;
-                const filePath = `${folder.nativePath}/${fileName}`;
-                const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`, { overwrite: true });
-                const fileToken = await fs.createSessionToken(fileEntry);
-
-                await layerVisible("show", layer.name);
-                await saveForWebPNG(fileEntry.name, folderToken, fileToken);
-                await layerVisible("hide", layer.name);
-
-                logger.info(`Exported: ${fileName}`);
-            }
-        });
-
-        logger.info('Export completed successfully');
+        // 결과 메시지
+        const totalLayers = selectedLayers.length;
+        const sizeMode = maintainDocumentSize ? "문서 크기 유지" : "레이어 크기 맞춤";
+        
+        if (failCount > 0) {
+            logger.warn(`Export completed with errors: ${successCount}/${totalLayers} successful`);
+            await showAlert(`PNG 내보내기 완료! (${sizeMode})\n성공: ${successCount}개\n실패: ${failCount}개`);
+        } else {
+            logger.info(`Export completed successfully: ${successCount}/${totalLayers}`);
+            await showAlert(`모든 레이어 PNG 내보내기 완료! (${sizeMode})\n총 ${successCount}개 파일 생성`);
+        }
 
     } catch (error) {
-        await handleError(error, 'export_png');
+        await handleError(error, 'export_selected_layers');
+    }
+}
+
+// 그룹 레이어 전용 처리 함수 (문서 크기 옵션 포함)
+async function exportGroupLayerToPNG(groupLayer, folder, folderToken, maintainDocumentSize = false) {
+    try {
+        const originalDoc = app.activeDocument;
+        
+        // 그룹 선택
+        await selectNoLays();
+        await selectByLayerID(groupLayer.id);
+        
+        // 새 문서 생성
+        await createDocCopyLayers(`${groupLayer.name}_export`);
+        const newDoc = app.activeDocument;
+        
+        // 모든 레이어를 하나로 합치기 (그룹의 모든 내용을 하나의 이미지로)
+        if (newDoc.layers.length > 1) {
+            await actionCommands("mergeVisible");
+        }
+        
+        // 문서 크기 유지 옵션에 따른 처리
+        if (!maintainDocumentSize) {
+            await layerTrim();
+        }
+        
+        // PNG 저장
+        const fileName = `${groupLayer.name}.png`;
+        const filePath = `${folder.nativePath}/${fileName}`;
+        const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`, { overwrite: true });
+        const fileToken = await fs.createSessionToken(fileEntry);
+        
+        await saveForWebPNG(fileEntry.name, folderToken, fileToken);
+        
+        // 새 문서 닫기
+        await docCloseWithoutSaving(newDoc);
+        
+        // 원본 문서로 복귀
+        app.activeDocument = originalDoc;
+        
+        return true;
+        
+    } catch (error) {
+        console.error(`Error exporting group ${groupLayer.name}:`, error);
+        return false;
+    }
+}
+
+// 단일 레이어 전용 처리 함수 (문서 크기 옵션 포함)
+async function exportSingleLayerToPNG(layer, folder, folderToken, maintainDocumentSize = false) {
+    try {
+        const originalDoc = app.activeDocument;
+        
+        // 레이어 선택
+        await selectNoLays();
+        await selectByLayerID(layer.id);
+        
+        // 새 문서 생성
+        await createDocCopyLayers(`${layer.name}_export`);
+        const newDoc = app.activeDocument;
+        
+        // 문서 크기 유지 옵션에 따른 처리
+        if (!maintainDocumentSize) {
+            await layerTrim();
+        }
+        
+        // PNG 저장
+        const fileName = `${layer.name}.png`;
+        const filePath = `${folder.nativePath}/${fileName}`;
+        const fileEntry = await fs.createEntryWithUrl(`file:${filePath}`, { overwrite: true });
+        const fileToken = await fs.createSessionToken(fileEntry);
+        
+        await saveForWebPNG(fileEntry.name, folderToken, fileToken);
+        
+        // 새 문서 닫기
+        await docCloseWithoutSaving(newDoc);
+        
+        // 원본 문서로 복귀
+        app.activeDocument = originalDoc;
+        
+        return true;
+        
+    } catch (error) {
+        console.error(`Error exporting layer ${layer.name}:`, error);
+        return false;
     }
 }
 
@@ -221,5 +363,6 @@ module.exports = {
     makeDocImportEntry,
     exportLayersAsDocSize,
     exportLayersFromImportPSD,
-    exportOnlySelectedLayers
+    exportOnlySelectedLayers,
+    exportSingleLayerToPNG
 };
