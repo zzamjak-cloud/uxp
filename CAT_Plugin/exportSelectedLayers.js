@@ -76,7 +76,7 @@ async function exportSelectedFile(pathId, fileType) {
             resultMessage += `\n실패한 레이어: ${failedLayers.map(f => f.name).join(', ')}`;
         }
 
-        await showAlert(resultMessage);
+        //await showAlert(resultMessage);
         logger.info(`Export completed - Success: ${successCount}, Failed: ${failedLayers.length}`);
 
     } catch (error) {
