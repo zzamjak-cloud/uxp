@@ -17,7 +17,7 @@ const { addGuide, addAllGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
 //const { clearHiddenEffects } = require("./clearHiddenEffects");
 //const { convertImageToPath } = require("./convertImageToPath");
-const { exportMarketScreenshot } = require("./exportMarketScreenshot");
+//const { exportMarketScreenshot } = require("./exportMarketScreenshot");
 const { animationMatchLayers } = require("./animationMatchLayers");
 
 // 경로 설정 객체
@@ -65,7 +65,7 @@ document.getElementById("saveselctedlayer").addEventListener("click", exportOnly
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
-document.getElementById("exportMarketScreenshot").addEventListener("click", exportMarketScreenshot);
+//document.getElementById("exportMarketScreenshot").addEventListener("click", exportMarketScreenshot);
 
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
