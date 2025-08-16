@@ -3,13 +3,13 @@ const app = require("photoshop").app;
 const fs = require('uxp').storage.localFileSystem;
 
 // 사용자 정의 모듈
+const { showAlert, getDataFolder } = require("./lib/lib");
 const { speedSave } = require("./exportSpeedSave");
 const { exportSelectedFile } = require("./exportSelectedLayers");
 const { savePngAndLinkToPSD } = require("./exportSelectedAndLink");
 const { appIconMaker, appIconPSDGenerate } = require("./appIconMaker");
 const { patchMaker } = require("./patchMaker");
 const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
-const { getPath } = require("./getPath");
 const { renamerLayers } = require("./renamerLayers");
 const { makeDocImportEntry} = require("./importFiles");
 const { addAllGuides } = require("./addGuide");
@@ -21,7 +21,7 @@ const pathConfig = {
     count: 3,
     prefix: 'getPath',
     handlers: {
-        get: getPath,
+        get: getDataFolder,
         save: savePngAndLinkToPSD,
         init: existSavePath
     }
@@ -30,6 +30,7 @@ const pathConfig = {
 // Export
 // 경로 ID 생성 및 처리
 Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
+
     const pathId = `${pathConfig.prefix}${num}`;
     
     // getPath 버튼들 (변경 없음)
@@ -44,7 +45,7 @@ Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
     } else if(num === 3){
         document.getElementById(`savePath${num}`)
             .addEventListener("click", () => exportSelectedFile(pathId, 'png'));
-    }else {
+    } else {
         // savePath1 기존 함수 사용
         document.getElementById(`savePath${num}`)
             .addEventListener("click", () => pathConfig.handlers.save(pathId));

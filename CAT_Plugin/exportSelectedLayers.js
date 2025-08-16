@@ -1,10 +1,10 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
-const { showAlert } = require('./lib/lib');
-const { createDoc, docCloseWithoutSaving, layerVisible } = require('./lib/lib_doc');
+const { getSaveFolderPath, sanitizeFileName } = require('./lib/lib');
+const { docCloseWithoutSaving } = require('./lib/lib_doc');
 const { saveForWebPNG, saveAsPSD } = require('./lib/lib_export');
-const { createLay, selectByLayerID, selectNoLays, layerTrim, duplicateLayer, moveLayer } = require('./lib/lib_layer');
+const { selectByLayerID, selectNoLays, layerTrim } = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { Logger } = require('./lib/logger');
 
@@ -67,16 +67,7 @@ async function exportSelectedFile(pathId, fileType) {
                 continue;
             }
         }
-
-        // 결과 메시지
-        let resultMessage = `처리 완료!\n성공: ${successCount}개`;
-        
-        if (failedLayers.length > 0) {
-            resultMessage += `\n실패: ${failedLayers.length}개`;
-            resultMessage += `\n실패한 레이어: ${failedLayers.map(f => f.name).join(', ')}`;
-        }
-
-        //await showAlert(resultMessage);
+        // 최종 결과 로그
         logger.info(`Export completed - Success: ${successCount}, Failed: ${failedLayers.length}`);
 
     } catch (error) {
@@ -248,43 +239,6 @@ async function saveFiles(doc, layerName, saveFolder, fileType) {
     } catch (error) {
         throw new Error(`파일 저장 실패: ${error.message}`);
     }
-}
-
-/**
- * 저장 폴더 경로 가져오기
- */
-async function getSaveFolderPath(pathId) {
-    try {
-        const dataFolder = await fs.getDataFolder();
-        const entries = await dataFolder.getEntries();
-
-        for (const entry of entries) {
-            if (entry.name === `${pathId}.txt`) {
-                const folderURL = await entry.read();
-                const folderEntry = await fs.getEntryWithUrl(`file:${folderURL}`);
-                const folderToken = await fs.createSessionToken(folderEntry);
-                
-                const folderNameArray = folderURL.split(/[\\\/]/);
-                const folderName = folderNameArray[folderNameArray.length - 1];
-
-                return {
-                    folderPath: folderURL,
-                    folderToken: folderToken,
-                    folderName: folderName
-                };
-            }
-        }
-        return null;
-    } catch (error) {
-        throw new Error(`저장 폴더 경로 가져오기 실패: ${error.message}`);
-    }
-}
-
-/**
- * 파일명에서 잘못된 문자 제거
- */
-function sanitizeFileName(fileName) {
-    return fileName.replace(/[<>:"/\\|?*]/g, '_').trim();
 }
 
 module.exports = {
