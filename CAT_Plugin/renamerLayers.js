@@ -1,6 +1,5 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
-const { showAlert } = require("./lib/lib");
 const { setLayerName, selectByLayerID } = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
 const { Logger } = require("./lib/logger");

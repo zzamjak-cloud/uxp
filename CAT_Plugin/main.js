@@ -3,16 +3,15 @@ const app = require("photoshop").app;
 const fs = require('uxp').storage.localFileSystem;
 
 // 사용자 정의 모듈
-const { speedSave } = require("./speedSave");
+const { speedSave } = require("./exportSpeedSave");
 const { exportSelectedFile } = require("./exportSelectedLayers");
+const { savePngAndLinkToPSD } = require("./exportSelectedAndLink");
 const { appIconMaker, appIconPSDGenerate } = require("./appIconMaker");
 const { patchMaker } = require("./patchMaker");
 const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
-const { savePngAndLinkToPSD } = require("./savePsdAndPng");
 const { getPath } = require("./getPath");
 const { renamerLayers } = require("./renamerLayers");
 const { makeDocImportEntry} = require("./importFiles");
-const { cleanPSD } = require("./cleanPSD");
 const { addAllGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
 const { animationMatchLayers } = require("./animationMatchLayers");
@@ -46,7 +45,7 @@ Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
         document.getElementById(`savePath${num}`)
             .addEventListener("click", () => exportSelectedFile(pathId, 'png'));
     }else {
-        // savePath1, savePath2는 기존 함수 사용
+        // savePath1 기존 함수 사용
         document.getElementById(`savePath${num}`)
             .addEventListener("click", () => pathConfig.handlers.save(pathId));
     }
@@ -77,7 +76,6 @@ document.getElementById("reversenumber").addEventListener("click", () => {rename
 document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
 document.getElementById("appiconmaker").addEventListener("click", () => appIconMaker("bicubicSharper"));
 document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
-document.getElementById("cleanpsd").addEventListener("click", cleanPSD);
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
 

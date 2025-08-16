@@ -6,15 +6,17 @@ const { docCloseWithoutSaving } = require("./lib/lib_doc");
 const { saveForWebPNG, saveAsPSD } = require("./lib/lib_export");
 const { executeAsModal } = require('photoshop').core;
 
-
 async function savePngAndLinkToPSD(txt_file_name) {
 
     // 데이터 폴더의 엔트리들 얻은 후
     const dataFolder = await fs.getDataFolder();
     const entries = await dataFolder.getEntries();
 
-    try {
+    // 체크박스 상태 확인 (문서 크기 유지 옵션)
+    const docSizeCheckbox = document.getElementById('maintainDocSize');
+    const docSizeCheck = docSizeCheckbox ? docSizeCheckbox.checked : false;
 
+    try {
         // 폴더에서 txt 파일을 탐색
         for (const entry of entries) {
             if (entry.name === `${txt_file_name}.txt`) {
@@ -35,7 +37,10 @@ async function savePngAndLinkToPSD(txt_file_name) {
                         await executeAsModal( async() => {
                             await selectByLayerID(layer.id);
                             await actionCommands("placedLayerEditContents");
-                            await layerTrim();
+                            // 문서 크기 유지 옵션에 따른 처리
+                            if (!docSizeCheck) {
+                                await layerTrim();
+                            }
                         },{});
                         await saveAndLink(entry);
                     // 그룹일 경우
@@ -44,7 +49,10 @@ async function savePngAndLinkToPSD(txt_file_name) {
                             await selectByLayerID(layer.id);
                             await actionCommands("newPlacedLayer");
                             await actionCommands("placedLayerEditContents");
-                            await layerTrim();
+                            // 문서 크기 유지 옵션에 따른 처리
+                            if (!docSizeCheck) {
+                                await layerTrim();
+                            }
                         },{});
                         await saveAndLink(entry);
                     } else {
@@ -62,7 +70,6 @@ async function savePngAndLinkToPSD(txt_file_name) {
 
 
 async function saveAndLink(entry) {
-        
 
     const doc = app.activeDocument;
 
@@ -75,12 +82,10 @@ async function saveAndLink(entry) {
         // 저장 폴더 URL 얻기
         const folder_URL = await entry.read();
         const folder_entry = await fs.getEntryWithUrl(`file:${folder_URL}`);
-        console.log(folder_entry.nativePath);
         const folder_token = await fs.createSessionToken(folder_entry)
 
-        // PNG 파일 저장
+        // PNG 파일 저장 ---------------------------------------
         const file_png_URL = `${folder_entry.nativePath}/${doc_png_name}`;
-        console.log(file_png_URL);
         const file_png_entry = await fs.createEntryWithUrl(`file:${file_png_URL}`, { overwrite: true });
         const file_png_token = await fs.createSessionToken(file_png_entry);
 
@@ -88,7 +93,7 @@ async function saveAndLink(entry) {
             await saveForWebPNG(file_png_entry.name, folder_token, file_png_token) 
         },{});
 
-        // PSD 파일 저장
+        // PSD 파일 저장 ---------------------------------------
         const file_psd_URL = `${folder_entry.nativePath}/${doc_psd_name}`;
         const file_psd_entry = await fs.createEntryWithUrl(`file:${file_psd_URL}`, { overwrite: true });
         const file_psd_token = await fs.createSessionToken(file_psd_entry);
@@ -103,7 +108,6 @@ async function saveAndLink(entry) {
         showAlert("Smart Object가 아닙니다.");
     }
 }
-
 
 module.exports = {
     savePngAndLinkToPSD
