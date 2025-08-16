@@ -120,7 +120,6 @@ async function addSelectLayer(layerID, layerID_array) {
    );
 }
 
-
 // 레이어 선택 해제
 async function selectNoLays() {
     await batchPlay(

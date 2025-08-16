@@ -450,8 +450,6 @@ async function saveAsPSD(file_psd_token) {
    await batchPlay ([action], {})
 }
 
-
-
 module.exports = {
    saveForWebPNG,
    saveForWebJPG,
