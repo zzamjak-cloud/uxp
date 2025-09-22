@@ -12,7 +12,8 @@ const RENAME_TYPES = {
     RENAME: 'rename',       // 이름 변경
     REPLACE: 'replace',     // 텍스트 대체
     NUMBER: 'number',       // 뒤에 숫자 추가
-    REVERSE_NUMBER: 'reversenumber'  // 뒤에 역순 숫자 추가
+    REVERSE_NUMBER: 'reversenumber',  // 뒤에 역순 숫자 추가
+    REMOVE: 'remove'        // 텍스트 제거
 };
 
 // 입력값 검증
@@ -32,6 +33,10 @@ function validateInputs(type, text, replaceText = '') {
 
     if (type === RENAME_TYPES.REPLACE && !replaceText) {
         throw new Error('대체할 텍스트를 입력해주세요.');
+    }
+
+    if (type === RENAME_TYPES.REMOVE && !text) {
+        throw new Error('제거할 텍스트를 입력해주세요.');
     }
 }
 
@@ -59,6 +64,9 @@ function generateNewName(layer, type, text, replaceText = '', index = 0, totalLa
             const num = index + 1;
             return `${layer.name}_${String(num).padStart(2, '0')}`;
         }
+
+        case RENAME_TYPES.REMOVE:
+            return layer.name.replace(text, '');
 
         default:
             return layer.name;

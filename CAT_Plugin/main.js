@@ -72,6 +72,7 @@ document.getElementById("rename").addEventListener("click", () => {renamerLayers
 document.getElementById("replace").addEventListener("click", () => {renamerLayers("replace")});
 document.getElementById("number").addEventListener("click", () => {renamerLayers("number")});
 document.getElementById("reversenumber").addEventListener("click", () => {renamerLayers("reversenumber")});
+document.getElementById("remove").addEventListener("click", () => {renamerLayers("remove")});
 
 // Etc
 document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
