@@ -1,7 +1,7 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
-const { addSelectLayer, selectNoLays } = require('./lib/lib_layer');
+const { addSelectLayer, selectNoLays, makeGroup, ungroupLayers } = require('./lib/lib_layer');
 const { saveAsPSD } = require('./lib/lib_export');
 const { actionCommands } = require("./lib/lib_layer");
 const { createDocCopyLayers, selectPrevDoc, docCloseWithoutSaving } = require('./lib/lib_doc');
@@ -30,10 +30,8 @@ async function cleanPSD() {
                 app.activeDocument = originalDoc;
                 console.log(`원본 문서 활성화: ${originalDoc.name}`);
                 
-                // 2. 새 문서 생성 및 레이어 복사
-                await selectAllLayers(originalDoc.layers);
-                await createDocCopyLayers(originalName);
-                newDoc = app.activeDocument;
+                // 2. 빠른 그룹화 방식으로 레이어 복사
+                newDoc = await copyLayersUsingGroupMethod(originalDoc, originalName);
                 const newDocID = newDoc.id;
                 
                 console.log(`새 문서 생성됨: ${newDoc.name} (ID: ${newDocID})`);
@@ -84,11 +82,11 @@ async function selectAllLayers(layers) {
         // 먼저 모든 레이어 선택 해제
         await selectNoLays();
         
-        // 모든 레이어 ID를 순서대로 수집 (재귀적으로)
+        // 모든 레이어 ID를 순서대로 수집 (재귀적으로, Background 레이어 제외)
         const allLayerIDs = [];
         collectAllLayerIDsInOrder(layers, allLayerIDs);
         
-        console.log(`총 ${allLayerIDs.length}개 레이어 발견 (순서 보존)`);
+        console.log(`총 ${allLayerIDs.length}개 레이어 발견 (Background 레이어 제외, 순서 보존)`);
         
         // 모든 레이어를 순서대로 선택
         if (allLayerIDs.length > 0) {
@@ -112,11 +110,64 @@ async function selectAllLayers(layers) {
     }
 }
 
-// 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적)
+// 그룹화를 통한 빠른 레이어 복사 방식
+async function copyLayersUsingGroupMethod(originalDoc, docName) {
+    
+    try {
+        console.log("그룹화 방식으로 빠른 레이어 복사 시작");
+        
+        // 1. 모든 레이어 선택
+        await selectAllLayers(originalDoc.layers);
+        
+        try {
+            await makeGroup("group");
+        } catch (groupErr) {
+            console.log("그룹화 실패", groupErr.message);
+        }
+        
+        console.log("그룹 생성 완료 후 새 문서로 복사 시작");
+
+        await createDocCopyLayers(docName);
+        const newDoc = app.activeDocument;
+        
+        if (!newDoc || newDoc.id === originalDoc.id) {
+            throw new Error('새 문서 생성에 실패했습니다.');
+        }
+        
+        // 4. 새 문서에서 그룹 해제 (라이브러리 함수 사용)
+        console.log("새 문서에서 그룹 해제 중...");
+        try {
+            await ungroupLayers();
+            console.log("그룹 해제 완료 - 모든 레이어가 개별 레이어로 복원됨");
+        } catch (ungroupErr) {
+            console.log("그룹 해제 실패, 수동으로 처리:", ungroupErr.message);
+            // 그룹 해제 실패 시에도 새 문서는 정상적으로 생성됨
+            // 사용자가 수동으로 그룹을 해제할 수 있음
+        }
+        
+        return newDoc;
+        
+    } catch (err) {
+        console.error("그룹화 방식 복사 중 오류:", err);
+        
+        // 오류 발생 시 기존 방식으로 폴백
+        console.log("그룹화 방식 실패, 기존 방식으로 폴백...");
+        await selectAllLayers(originalDoc.layers);
+        await createDocCopyLayers(docName);
+        return app.activeDocument;
+    }
+}
+
+// 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 제외)
 function collectAllLayerIDsInOrder(layers, layerIDs) {
     for (const layer of layers) {
+
+        if (layer.isBackgroundLayer) {
+            console.log(`Background 레이어 제외: ${layer.name} (ID: ${layer.id})`);
+            continue;
+        }
+        
         layerIDs.push(layer.id);
-        console.log(`레이어 추가: ${layer.name} (ID: ${layer.id}, 타입: ${layer.kind})`);
         
         // 그룹인 경우 내부 레이어들도 재귀적으로 수집 (순서 보존)
         if (layer.kind === 'group' && layer.layers) {

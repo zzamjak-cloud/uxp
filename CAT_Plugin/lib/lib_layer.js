@@ -442,6 +442,28 @@ async function makeGroup(groupName) {
    );
 }
 
+// 그룹 해제
+async function ungroupLayers() {
+   await batchPlay(
+      [
+         {
+            _obj: "ungroupLayersEvent",
+            _target: [
+               {
+                  _ref: "layer",
+                  _enum: "ordinal",
+                  _value: "targetEnum"
+               }
+            ],
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
 // 투명도 설정
 // value : 0 ~ 100
 async function layOpacity(value) {
@@ -721,5 +743,6 @@ module.exports = {
    selectByLayerID,     // 레이어 ID로 선택
    setLayerName,        // 레이어 이름 변경
    setLocking,          // 레이어 잠금 설정
-   selectionForLayer    // 투명도 기반 레이어 영역 선택
+   selectionForLayer,   // 투명도 기반 레이어 영역 선택
+   ungroupLayers        // 그룹 해제
 };
