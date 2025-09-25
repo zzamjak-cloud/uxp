@@ -1,7 +1,7 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
-const { addSelectLayer, selectNoLays, makeGroup, ungroupLayers } = require('./lib/lib_layer');
+const { addSelectLayer, selectNoLays } = require('./lib/lib_layer');
 const { saveAsPSD } = require('./lib/lib_export');
 const { actionCommands } = require("./lib/lib_layer");
 const { createDocCopyLayers, selectPrevDoc, docCloseWithoutSaving } = require('./lib/lib_doc');
@@ -30,8 +30,10 @@ async function cleanPSD() {
                 app.activeDocument = originalDoc;
                 console.log(`원본 문서 활성화: ${originalDoc.name}`);
                 
-                // 2. 빠른 그룹화 방식으로 레이어 복사
-                newDoc = await copyLayersUsingGroupMethod(originalDoc, originalName);
+                // 2. 모든 레이어 선택 후 새 문서로 복사
+                await selectAllLayers(originalDoc.layers);
+                await createDocCopyLayers(originalName);
+                newDoc = app.activeDocument;
                 const newDocID = newDoc.id;
                 
                 console.log(`새 문서 생성됨: ${newDoc.name} (ID: ${newDocID})`);
@@ -76,31 +78,62 @@ async function cleanPSD() {
 }
 
 async function selectAllLayers(layers) {
+    const { batchPlay } = require('photoshop').action;
+    
     try {
-        console.log("레이어 선택 시작 - 순서 보존 및 유실 방지");
+        console.log("레이어 선택 시작 - layerID 배열 배치 방식");
         
         // 먼저 모든 레이어 선택 해제
         await selectNoLays();
         
-        // 모든 레이어 ID를 순서대로 수집 (재귀적으로, Background 레이어 제외)
+        // 모든 레이어 ID를 순서대로 수집 (재귀적으로, 모든 레이어 포함)
         const allLayerIDs = [];
         collectAllLayerIDsInOrder(layers, allLayerIDs);
         
-        console.log(`총 ${allLayerIDs.length}개 레이어 발견 (Background 레이어 제외, 순서 보존)`);
+        console.log(`총 ${allLayerIDs.length}개 레이어 발견 (모든 레이어 포함, 순서 보존)`);
         
-        // 모든 레이어를 순서대로 선택
+        // layerID 배열을 사용한 배치 선택
         if (allLayerIDs.length > 0) {
             await executeAsModal(async () => {
-                for (let i = 0; i < allLayerIDs.length; i++) {
-                    const layerID = allLayerIDs[i];
-                    try {
-                        await addSelectLayer(layerID, allLayerIDs);
-                    } catch (err) {
-                        console.warn(`레이어 ${layerID} 선택 실패:`, err.message);
-                        // 개별 레이어 선택 실패는 무시하고 계속 진행
+                // 첫 번째 레이어 선택
+                await batchPlay([{
+                    _obj: "select",
+                    _target: [{
+                        _ref: "layer",
+                        _name: layers[0].name  // 첫 번째 레이어 이름
+                    }],
+                    makeVisible: false,
+                    layerID: [allLayerIDs[0]],  // 첫 번째 레이어 ID
+                    _options: {
+                        dialogOptions: "dontDisplay"
                     }
+                }], {});
+                
+                console.log(`첫 번째 레이어 선택 완료: ${layers[0].name}`);
+                
+                // 나머지 모든 레이어를 연속 선택으로 추가
+                if (allLayerIDs.length > 1) {
+                    await batchPlay([{
+                        _obj: "select",
+                        _target: [{
+                            _ref: "layer",
+                            _name: layers[layers.length - 1].name  // 마지막 레이어 이름
+                        }],
+                        selectionModifier: {
+                            _enum: "selectionModifierType",
+                            _value: "addToSelectionContinuous"
+                        },
+                        makeVisible: false,
+                        layerID: allLayerIDs,  // 모든 레이어 ID 배열
+                        _options: {
+                            dialogOptions: "dontDisplay"
+                        }
+                    }], {});
+                    
+                    console.log(`모든 레이어 배치 선택 완료: ${allLayerIDs.length}개 레이어`);
                 }
-            }, { commandName: "Select All Layers" });
+                
+            }, { commandName: "Select All Layers with layerID Array" });
         }
         
         console.log("모든 레이어 선택 완료");
@@ -110,63 +143,10 @@ async function selectAllLayers(layers) {
     }
 }
 
-// 그룹화를 통한 빠른 레이어 복사 방식
-async function copyLayersUsingGroupMethod(originalDoc, docName) {
-    
-    try {
-        console.log("그룹화 방식으로 빠른 레이어 복사 시작");
-        
-        // 1. 모든 레이어 선택
-        await selectAllLayers(originalDoc.layers);
-        
-        try {
-            await makeGroup("group");
-        } catch (groupErr) {
-            console.log("그룹화 실패", groupErr.message);
-        }
-        
-        console.log("그룹 생성 완료 후 새 문서로 복사 시작");
 
-        await createDocCopyLayers(docName);
-        const newDoc = app.activeDocument;
-        
-        if (!newDoc || newDoc.id === originalDoc.id) {
-            throw new Error('새 문서 생성에 실패했습니다.');
-        }
-        
-        // 4. 새 문서에서 그룹 해제 (라이브러리 함수 사용)
-        console.log("새 문서에서 그룹 해제 중...");
-        try {
-            await ungroupLayers();
-            console.log("그룹 해제 완료 - 모든 레이어가 개별 레이어로 복원됨");
-        } catch (ungroupErr) {
-            console.log("그룹 해제 실패, 수동으로 처리:", ungroupErr.message);
-            // 그룹 해제 실패 시에도 새 문서는 정상적으로 생성됨
-            // 사용자가 수동으로 그룹을 해제할 수 있음
-        }
-        
-        return newDoc;
-        
-    } catch (err) {
-        console.error("그룹화 방식 복사 중 오류:", err);
-        
-        // 오류 발생 시 기존 방식으로 폴백
-        console.log("그룹화 방식 실패, 기존 방식으로 폴백...");
-        await selectAllLayers(originalDoc.layers);
-        await createDocCopyLayers(docName);
-        return app.activeDocument;
-    }
-}
-
-// 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 제외)
+// 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
 function collectAllLayerIDsInOrder(layers, layerIDs) {
     for (const layer of layers) {
-
-        if (layer.isBackgroundLayer) {
-            console.log(`Background 레이어 제외: ${layer.name} (ID: ${layer.id})`);
-            continue;
-        }
-        
         layerIDs.push(layer.id);
         
         // 그룹인 경우 내부 레이어들도 재귀적으로 수집 (순서 보존)
