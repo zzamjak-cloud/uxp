@@ -1,5 +1,17 @@
 const { batchPlay } = require("photoshop").action;
 
+// 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
+function collectAllLayerIDsInOrder(layers, layerIDs) {
+   for (const layer of layers) {
+       layerIDs.push(layer.id);
+       
+       // 그룹인 경우 내부 레이어들도 재귀적으로 수집 (순서 보존)
+       if (layer.kind === 'group' && layer.layers) {
+           collectAllLayerIDsInOrder(layer.layers, layerIDs);
+       }
+   }
+}
+
 // 신규 레이어 생성
 async function createLay() {
    await batchPlay(
@@ -547,6 +559,47 @@ async function selectionForLayer() {
    );
 }
 
+// 레이어 ID 배열을 사용한 배치 선택
+async function selectAllLayersByID(layers, layerIDs) {
+   // 첫 번째 레이어 선택
+   await batchPlay([{
+      _obj: "select",
+      _target: [{
+          _ref: "layer",
+          _name: layers[0].name  // 첫 번째 레이어 이름
+      }],
+      makeVisible: false,
+      layerID: [layerIDs[0]],  // 첫 번째 레이어 ID
+      _options: {
+          dialogOptions: "dontDisplay"
+      }
+  }], {});
+  
+  console.log(`첫 번째 레이어 선택 완료: ${layers[0].name}`);
+  
+  // 나머지 모든 레이어를 연속 선택으로 추가
+  if (layerIDs.length > 1) {
+      await batchPlay([{
+          _obj: "select",
+          _target: [{
+              _ref: "layer",
+              _name: layers[layers.length - 1].name  // 마지막 레이어 이름
+          }],
+          selectionModifier: {
+              _enum: "selectionModifierType",
+              _value: "addToSelectionContinuous"
+          },
+          makeVisible: false,
+          layerID: layerIDs,  // 모든 레이어 ID 배열
+          _options: {
+              dialogOptions: "dontDisplay"
+          }
+      }], {});
+      
+      console.log(`모든 레이어 배치 선택 완료: ${layerIDs.length}개 레이어`);
+  }
+}
+
 // WorkPath 생성
 // value : 0 ~ 100
 async function makeWorkPath(value) {
@@ -719,6 +772,7 @@ async function moveLayerOffset(layer, x, y) {
 
 module.exports = {
    actionCommands,
+   collectAllLayerIDsInOrder, // 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
    addSelectLayer,      // 레이어 선택 추가
    clearLayerEffect,    // 레이어 이펙트 제거
    createLay,           // 신규 레이어 생성
@@ -741,6 +795,7 @@ module.exports = {
    selectNoLays,        // 레이어 선택 해제
    selectLayerByName,   // 이름으로 레이어 선택
    selectByLayerID,     // 레이어 ID로 선택
+   selectAllLayersByID, // 레이어 ID 배열을 사용한 배치 선택
    setLayerName,        // 레이어 이름 변경
    setLocking,          // 레이어 잠금 설정
    selectionForLayer,   // 투명도 기반 레이어 영역 선택

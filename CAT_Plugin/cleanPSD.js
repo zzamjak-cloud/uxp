@@ -1,10 +1,10 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
-const { addSelectLayer, selectNoLays } = require('./lib/lib_layer');
+const { selectNoLays } = require('./lib/lib_layer');
 const { saveAsPSD } = require('./lib/lib_export');
-const { actionCommands } = require("./lib/lib_layer");
-const { createDocCopyLayers, selectPrevDoc, docCloseWithoutSaving } = require('./lib/lib_doc');
+const { actionCommands, selectAllLayersByID, collectAllLayerIDsInOrder } = require("./lib/lib_layer");
+const { createDocCopyLayers, docCloseWithoutSaving } = require('./lib/lib_doc');
 
 
 async function cleanPSD() {
@@ -28,7 +28,6 @@ async function cleanPSD() {
             try {
                 // 1. 원본 문서로 다시 전환 (여러 문서 환경에서 안전성 확보)
                 app.activeDocument = originalDoc;
-                console.log(`원본 문서 활성화: ${originalDoc.name}`);
                 
                 // 2. 모든 레이어 선택 후 새 문서로 복사
                 await selectAllLayers(originalDoc.layers);
@@ -95,44 +94,9 @@ async function selectAllLayers(layers) {
         // layerID 배열을 사용한 배치 선택
         if (allLayerIDs.length > 0) {
             await executeAsModal(async () => {
-                // 첫 번째 레이어 선택
-                await batchPlay([{
-                    _obj: "select",
-                    _target: [{
-                        _ref: "layer",
-                        _name: layers[0].name  // 첫 번째 레이어 이름
-                    }],
-                    makeVisible: false,
-                    layerID: [allLayerIDs[0]],  // 첫 번째 레이어 ID
-                    _options: {
-                        dialogOptions: "dontDisplay"
-                    }
-                }], {});
-                
-                console.log(`첫 번째 레이어 선택 완료: ${layers[0].name}`);
-                
-                // 나머지 모든 레이어를 연속 선택으로 추가
-                if (allLayerIDs.length > 1) {
-                    await batchPlay([{
-                        _obj: "select",
-                        _target: [{
-                            _ref: "layer",
-                            _name: layers[layers.length - 1].name  // 마지막 레이어 이름
-                        }],
-                        selectionModifier: {
-                            _enum: "selectionModifierType",
-                            _value: "addToSelectionContinuous"
-                        },
-                        makeVisible: false,
-                        layerID: allLayerIDs,  // 모든 레이어 ID 배열
-                        _options: {
-                            dialogOptions: "dontDisplay"
-                        }
-                    }], {});
-                    
-                    console.log(`모든 레이어 배치 선택 완료: ${allLayerIDs.length}개 레이어`);
-                }
-                
+
+                await selectAllLayersByID(layers, allLayerIDs);
+
             }, { commandName: "Select All Layers with layerID Array" });
         }
         
@@ -140,19 +104,6 @@ async function selectAllLayers(layers) {
     } catch (err) {
         console.error("레이어 선택 중 오류:", err);
         throw err;
-    }
-}
-
-
-// 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
-function collectAllLayerIDsInOrder(layers, layerIDs) {
-    for (const layer of layers) {
-        layerIDs.push(layer.id);
-        
-        // 그룹인 경우 내부 레이어들도 재귀적으로 수집 (순서 보존)
-        if (layer.kind === 'group' && layer.layers) {
-            collectAllLayerIDsInOrder(layer.layers, layerIDs);
-        }
     }
 }
 
