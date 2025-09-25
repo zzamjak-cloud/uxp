@@ -15,6 +15,7 @@ const { makeDocImportEntry} = require("./importFiles");
 const { addAllGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
 const { animationMatchLayers } = require("./animationMatchLayers");
+const { cleanPSD } = require("./cleanPSD");
 
 // 경로 설정 객체
 const pathConfig = {
@@ -80,7 +81,7 @@ document.getElementById("appiconmaker").addEventListener("click", () => appIconM
 document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
-
+document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
 
