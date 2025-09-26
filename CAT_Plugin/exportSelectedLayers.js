@@ -1,8 +1,9 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
+const { batchPlay } = require('photoshop').action;
 const { executeAsModal } = require('photoshop').core;
 const { getSaveFolderPath, sanitizeFileName } = require('./lib/lib');
-const { docCloseWithoutSaving } = require('./lib/lib_doc');
+const { docCloseWithoutSaving, createDocCopyLayers } = require('./lib/lib_doc');
 const { saveForWebPNG, saveAsPSD } = require('./lib/lib_export');
 const { selectByLayerID, selectNoLays, layerTrim } = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
@@ -10,10 +11,8 @@ const { Logger } = require('./lib/logger');
 
 const logger = new Logger('ExportSelectedToPSD');
 
-/**
- * 선택된 그룹 또는 스마트 오브젝트를 새 문서로 내보내기
- * @param {string} pathId - 저장 경로 ID (getPath3)
- */
+// 선택된 그룹 또는 스마트 오브젝트를 새 문서로 내보내기
+// @param {string} pathId - 저장 경로 ID (getPath3)
 async function exportSelectedFile(pathId, fileType) {
     try {
         // 현재 문서 및 선택된 레이어 확인
@@ -25,7 +24,7 @@ async function exportSelectedFile(pathId, fileType) {
         const maintainDocumentSize = maintainDocSizeCheckbox ? maintainDocSizeCheckbox.checked : false;
 
         if (selectedLayers.length === 0) {
-            throw new Error('내보낼 레이어를 선택해주세요.');
+            throw new Error('레이어를 선택해주세요.');
         }
 
         // 선택된 레이어가 그룹 또는 스마트 오브젝트인지 확인
@@ -56,18 +55,15 @@ async function exportSelectedFile(pathId, fileType) {
                 logger.info(`Processing ${i + 1}/${validLayers.length}: ${layer.name}`);
                 await processLayer(layer, originalDoc, saveFolder, fileType, maintainDocumentSize);
                 successCount++;
-                logger.info(`✅ Successfully processed: ${layer.name}`);
             } catch (error) {
-                logger.error(`❌ Failed to process layer ${layer.name}: ${error.message}`);
                 failedLayers.push({
                     name: layer.name,
                     error: error.message
                 });
-                // 개별 레이어 실패 시에도 계속 진행
                 continue;
             }
         }
-        // 최종 결과 로그
+        
         logger.info(`Export completed - Success: ${successCount}, Failed: ${failedLayers.length}`);
 
     } catch (error) {
@@ -75,17 +71,12 @@ async function exportSelectedFile(pathId, fileType) {
     }
 }
 
-/**
- * 개별 레이어 처리
- */
+// 개별 레이어 처리
 async function processLayer(layer, originalDoc, saveFolder, fileType, maintainDocumentSize) {
     try {
-        logger.info(`Processing layer: ${layer.name} (ID: ${layer.id})`);
-
         // 원본 문서가 활성 상태인지 확인
-        if (app.activeDocument.id !== originalDoc.id) {
+        if (app.activeDocument.id !== originalDoc.id)  
             app.activeDocument = originalDoc;
-        }
 
         await executeAsModal(async () => {
             await copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, maintainDocumentSize);
@@ -115,40 +106,19 @@ async function processLayer(layer, originalDoc, saveFolder, fileType, maintainDo
     }
 }
 
-/**
- * 레이어를 새 문서로 복사하고 저장
- */
+// 레이어를 새 문서로 복사하고 저장
 async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, maintainDocumentSize) {
-    const { batchPlay } = require('photoshop').action;
+    
     let newDoc = null;
     
     try {
-        logger.info(`Starting copy process for layer: ${layer.name}`);
-
         // 1. 원본 문서에서 레이어 선택
         app.activeDocument = originalDoc;
         await selectNoLays();
         await selectByLayerID(layer.id);
-        
-        logger.info(`Selected layer: ${layer.name}`);
 
         // 2. 선택된 레이어를 새 문서로 복사
-        const result = await batchPlay([{
-            _obj: "make",
-            _target: [{
-                _ref: "document"
-            }],
-            name: `${sanitizeFileName(layer.name)}_export`,
-            using: {
-                _ref: "layer",
-                _enum: "ordinal",
-                _value: "targetEnum"
-            },
-            version: 5,
-            _options: {
-                dialogOptions: "dontDisplay"
-            }
-        }], { synchronousExecution: true });
+        await createDocCopyLayers(layer.name);
 
         // 3. 새 문서 참조 가져오기
         newDoc = app.activeDocument;
@@ -160,21 +130,17 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, 
         logger.info(`Created new document: ${newDoc.name} (ID: ${newDoc.id})`);
 
         // 4. 문서 크기 유지 옵션에 따른 처리
-        if (!maintainDocumentSize) {
-            // 트림 모드: 레이어 경계에 맞춰 자르기
+        if (!maintainDocumentSize) 
             await layerTrim();
-        }
 
         // 5. 파일 저장
         await saveFiles(newDoc, layer.name, saveFolder, fileType);
 
         // 6. 새 문서 닫기
-        logger.info(`Closing new document: ${newDoc.name}`);
         await docCloseWithoutSaving(newDoc);
 
         // 7. 원본 문서로 안전하게 복귀
         app.activeDocument = originalDoc;
-        logger.info(`Returned to original document: ${originalDoc.name}`);
 
     } catch (error) {
         logger.error(`Error in copyLayerToNewDocument: ${error.message}`);
@@ -200,9 +166,7 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, 
     }
 }
 
-/**
- * PSD 및 PNG 파일 저장
- */
+// PSD 및 PNG 파일 저장
 async function saveFiles(doc, layerName, saveFolder, fileType) {
     try {
         const sanitizedName = sanitizeFileName(layerName);

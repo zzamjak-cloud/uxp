@@ -116,12 +116,12 @@ async function layerVisible(show_hide, name) {
 }
 
 module.exports = {
-    createDoc,
-    selectPrevDoc,
-    docDuplicate,
-    docResizeCanvas,
-    docResizeImage,
-    docCloseWithoutSaving,
-    createDocCopyLayers,
-    layerVisible
+    createDoc,                // 문서 생성
+    selectPrevDoc,            // 이전 문서 선택
+    docDuplicate,             // 문서 복사
+    docResizeCanvas,          // 문서 크기 조정
+    docResizeImage,           // 문서 이미지 크기 조정
+    docCloseWithoutSaving,   // 문서 닫기 (저장하지 않음)
+    createDocCopyLayers,     // 문서 복사 (레이어 복사)
+    layerVisible             // 레이어 보이기/숨기기
 };
