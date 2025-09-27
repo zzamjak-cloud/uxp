@@ -1,7 +1,7 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
-const { makeGuide } = require('./lib/lib_guide');
+const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
 const { layerTranslate, selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { createSimpleTextLayer, setTextContent } = require('./lib/lib_text');
@@ -90,7 +90,7 @@ async function createTextLayerReliable(text, x, y) {
         await createSimpleTextLayer(text, x, y);
 
         // 2. 생성 직후 약간의 지연
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // await new Promise(resolve => setTimeout(resolve, 50));
 
         // 3. 활성 레이어가 텍스트 레이어인지 확인 (가장 확실한 방법)
         let createdLayer = doc.activeLayer;
@@ -255,25 +255,6 @@ async function removeGroupByName(groupName) {
         }
     } catch (error) {
         logger.error(`Failed to remove group "${groupName}":`, error);
-    }
-}
-
-/**
- * 모든 가이드를 제거하는 함수
- */
-async function clearAllGuides() {
-    try {
-        await batchPlay([
-            {
-                _obj: "clearCanvasGuides",
-                _isCommand: false
-            }
-        ], { synchronousExecution: true });
-        
-        logger.info('Cleared all guides');
-    } catch (error) {
-        logger.error('Failed to clear guides:', error);
-        throw error;
     }
 }
 

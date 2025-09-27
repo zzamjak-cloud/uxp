@@ -49,6 +49,17 @@ async function makeGuide(position, axis) {
     await batchPlay([action],{});
 }
 
+// 모든 가이드를 제거하는 함수
+async function clearAllGuides() {
+    await batchPlay([
+        {
+            _obj: "clearCanvasGuides",
+            _isCommand: false
+        }
+    ], { synchronousExecution: true });
+}
+
 module.exports = {
-    makeGuide
+    makeGuide,
+    clearAllGuides
 }
