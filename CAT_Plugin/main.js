@@ -16,6 +16,7 @@ const { addAllGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
 const { animationMatchLayers } = require("./animationMatchLayers");
 const { cleanPSD } = require("./cleanPSD");
+const { clearHiddenEffects } = require("./clearHiddenEffects");
 
 // 경로 설정 객체
 const pathConfig = {
@@ -61,6 +62,7 @@ document.getElementById("saveforwebjpg").addEventListener("click", () => { speed
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
+document.getElementById("clearHiddenFX").addEventListener("click", () => {clearHiddenEffects()});
 
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
