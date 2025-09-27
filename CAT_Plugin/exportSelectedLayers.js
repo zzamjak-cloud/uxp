@@ -21,7 +21,7 @@ async function exportSelectedFile(pathId, fileType) {
 
         // 체크박스 상태 확인 (문서 크기 유지 옵션)
         const maintainDocSizeCheckbox = document.getElementById('maintainDocSize');
-        const maintainDocumentSize = maintainDocSizeCheckbox ? maintainDocSizeCheckbox.checked : false;
+        const isMaintainDocSize = maintainDocSizeCheckbox ? maintainDocSizeCheckbox.checked : false;
 
         if (selectedLayers.length === 0) {
             throw new Error('레이어를 선택해주세요.');
@@ -42,8 +42,6 @@ async function exportSelectedFile(pathId, fileType) {
             throw new Error('저장 폴더가 지정되지 않았습니다. 먼저 폴더를 선택해주세요.');
         }
 
-        logger.info(`Export started - Layers: ${validLayers.length}, Folder: ${saveFolder.folderName}`);
-
         // 처리 통계
         let successCount = 0;
         let failedLayers = [];
@@ -53,7 +51,7 @@ async function exportSelectedFile(pathId, fileType) {
             const layer = validLayers[i];
             try {
                 logger.info(`Processing ${i + 1}/${validLayers.length}: ${layer.name}`);
-                await processLayer(layer, originalDoc, saveFolder, fileType, maintainDocumentSize);
+                await processLayer(layer, originalDoc, saveFolder, fileType, isMaintainDocSize);
                 successCount++;
             } catch (error) {
                 failedLayers.push({
@@ -63,23 +61,20 @@ async function exportSelectedFile(pathId, fileType) {
                 continue;
             }
         }
-        
-        logger.info(`Export completed - Success: ${successCount}, Failed: ${failedLayers.length}`);
-
     } catch (error) {
         await handleError(error, 'export_selected_to_psd');
     }
 }
 
 // 개별 레이어 처리
-async function processLayer(layer, originalDoc, saveFolder, fileType, maintainDocumentSize) {
+async function processLayer(layer, originalDoc, saveFolder, fileType, isMaintainDocSize) {
     try {
         // 원본 문서가 활성 상태인지 확인
         if (app.activeDocument.id !== originalDoc.id)  
             app.activeDocument = originalDoc;
 
         await executeAsModal(async () => {
-            await copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, maintainDocumentSize);
+            await copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, isMaintainDocSize);
         }, { 
             commandName: `Export ${layer.name}`,
             historyStateInfo: {
@@ -87,9 +82,6 @@ async function processLayer(layer, originalDoc, saveFolder, fileType, maintainDo
                 target: originalDoc
             }
         });
-
-        logger.info(`✅ Completed processing: ${layer.name}`);
-
     } catch (error) {
         logger.error(`❌ Error processing layer ${layer.name}: ${error.message}`);
         
@@ -107,7 +99,7 @@ async function processLayer(layer, originalDoc, saveFolder, fileType, maintainDo
 }
 
 // 레이어를 새 문서로 복사하고 저장
-async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, maintainDocumentSize) {
+async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, isMaintainDocSize) {
     
     let newDoc = null;
     
@@ -130,11 +122,11 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, 
         logger.info(`Created new document: ${newDoc.name} (ID: ${newDoc.id})`);
 
         // 4. 문서 크기 유지 옵션에 따른 처리
-        if (!maintainDocumentSize) 
+        if (!isMaintainDocSize) 
             await layerTrim();
 
         // 5. 파일 저장
-        await saveFiles(newDoc, layer.name, saveFolder, fileType);
+        await saveFiles(layer.name, saveFolder, fileType);
 
         // 6. 새 문서 닫기
         await docCloseWithoutSaving(newDoc);
@@ -167,12 +159,21 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, 
 }
 
 // PSD 및 PNG 파일 저장
-async function saveFiles(doc, layerName, saveFolder, fileType) {
+async function saveFiles(layerName, saveFolder, fileType) {
     try {
         const sanitizedName = sanitizeFileName(layerName);
         
+        // PNG 저장 (PSD와 PNG 타입 모두에서 필요)
+        const pngFileName = `${sanitizedName}.png`;
+        const pngFilePath = `${saveFolder.folderPath}/${pngFileName}`;
+        const pngFileEntry = await fs.createEntryWithUrl(`file:${pngFilePath}`, { overwrite: true });
+        const pngFileToken = await fs.createSessionToken(pngFileEntry);
+        
+        await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
+        logger.info(`Saved PNG: ${pngFileName}`);
+        
+        // PSD 저장 (PSD 타입일 때만)
         if (fileType === 'psd') {
-            // PSD 저장
             const psdFileName = `${sanitizedName}.psd`;
             const psdFilePath = `${saveFolder.folderPath}/${psdFileName}`;
             const psdFileEntry = await fs.createEntryWithUrl(`file:${psdFilePath}`, { overwrite: true });
@@ -180,24 +181,6 @@ async function saveFiles(doc, layerName, saveFolder, fileType) {
             
             await saveAsPSD(psdFileToken);
             logger.info(`Saved PSD: ${psdFileName}`);
-
-            // PNG 저장
-            const pngFileName = `${sanitizedName}.png`;
-            const pngFilePath = `${saveFolder.folderPath}/${pngFileName}`;
-            const pngFileEntry = await fs.createEntryWithUrl(`file:${pngFilePath}`, { overwrite: true });
-            const pngFileToken = await fs.createSessionToken(pngFileEntry);
-            
-            await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
-            logger.info(`Saved PNG: ${pngFileName}`);
-        } else if (fileType === 'png') {
-            // PNG 저장
-            const pngFileName = `${sanitizedName}.png`;
-            const pngFilePath = `${saveFolder.folderPath}/${pngFileName}`;
-            const pngFileEntry = await fs.createEntryWithUrl(`file:${pngFilePath}`, { overwrite: true });
-            const pngFileToken = await fs.createSessionToken(pngFileEntry);
-            
-            await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
-            logger.info(`Saved PNG: ${pngFileName}`);
         }
 
     } catch (error) {
