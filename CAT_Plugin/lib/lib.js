@@ -20,8 +20,6 @@ async function getDataFolder(folder_name) {
     
     const file = await dataFolder.createFile(`${folder_name}.txt`, {overwrite: true});
     await file.write(saveFolder.nativePath);
-    // console.log(`${folder_name}.txt 파일 저장 완료`);
-    showAlert(`이제부터 "${saveFolder.name}" 폴더에 파일을 저장합니다.`);
     document.getElementById(`${folder_name}`).innerText = saveFolder.name;
 }
 
@@ -64,9 +62,9 @@ function sanitizeFileName(fileName) {
 }
 
 module.exports = {
-    createFolderToken,
-    getDataFolder,
-    getSaveFolderPath,
-    showAlert,
-    sanitizeFileName
+    createFolderToken,   // 폴더생성 및 세션토큰 발행
+    getDataFolder,       // {폴더명}.txt 파일 생성 : 지정된 폴더 경로를 저장할 데이터 폴더
+    getSaveFolderPath,   // 지정된 저장 폴더 경로 가져오기
+    showAlert,           // 경고창 표시
+    sanitizeFileName     // 파일명에서 잘못된 문자 제거
 };
