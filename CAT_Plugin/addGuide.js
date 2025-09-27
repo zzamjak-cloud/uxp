@@ -4,7 +4,7 @@ const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
 const { layerTranslate, selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
-const { createSimpleTextLayer, setTextContent } = require('./lib/lib_text');
+const { createTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
 
 const logger = new Logger('AddGuide');
@@ -56,12 +56,10 @@ async function addAllGuides() {
                     const cellRight = cellLeft + sectionWidth;
                     const cellBottom = cellTop + sectionHeight;
                     
-                    const centerX = (cellLeft + cellRight) / 2;
-                    const centerY = (cellTop + cellBottom) / 2;
+                    const centerX = (cellLeft + cellRight) * 0.5;
+                    const centerY = (cellTop + cellBottom) * 0.5 + 6;
                     
-                    logger.info(`Creating text "${number}" at cell center (${centerX}, ${centerY}) for cell [${row}, ${col}]`);
-                    
-                    const layerId = await createTextLayerReliable(number.toString(), centerX, centerY);
+                    const layerId = await createTextLayerReliable(number.toString(), centerX, centerY, rows, cols);
                     if (layerId) {
                         textLayerIds.push(layerId);
                     }
@@ -69,7 +67,7 @@ async function addAllGuides() {
                 }
             }
             
-            // *** 수정된 부분: 안전한 그룹 생성 방식 사용 ***
+            // 'Num' 그룹 생성
             if (textLayerIds.length > 0) {
                 await createGroupFromLayers(textLayerIds, 'Num');
             }
@@ -82,43 +80,30 @@ async function addAllGuides() {
     }
 }
 // 안정적인 텍스트 레이어 생성 함수
-async function createTextLayerReliable(text, x, y) {
+async function createTextLayerReliable(text, x, y, rows, cols) {
     try {
         const doc = app.activeDocument;
         
-        // 1. batchPlay를 사용하여 직접 텍스트 레이어 생성
-        await createSimpleTextLayer(text, x, y);
+        // 1. 텍스트 레이어 생성 (rows에 따라 텍스트 사이즈 설정)
+        if (rows < 10) {
+            await createTextLayer(text, x, y, "Arial-BoldMT", 30, 0, 0, 0, "center");
+        } else if (rows > 30) {
+            await createTextLayer(text, x, y, "Arial-BoldMT", 14, 0, 0, 0, "center");
+        } else {
+            await createTextLayer(text, x, y, "Arial-BoldMT", 18, 0, 0, 0, "center");
+        }
 
         // 2. 생성 직후 약간의 지연
         // await new Promise(resolve => setTimeout(resolve, 50));
 
-        // 3. 활성 레이어가 텍스트 레이어인지 확인 (가장 확실한 방법)
+        // 3. 활성 레이어가 텍스트 레이어인지 확인하고 TextContent 설정
         let createdLayer = doc.activeLayer;
-        
-        // 4. 텍스트 레이어 이름 설정
         if (createdLayer && createdLayer.kind === 'text') {
             const layerId = createdLayer.id;
             
-            try {
-                await setTextContent(text);
-            } 
+            try { await setTextContent(text); } 
             catch (nameError) { logger.warn(`Failed to set layer name: ${nameError.message}`); }
             
-            try {  // 위치 미세 조정
-                const bounds = createdLayer.bounds;
-                const currentCenterX = (bounds.left._value + bounds.right._value) / 2;
-                const currentCenterY = (bounds.top._value + bounds.bottom._value) / 2;
-                
-                const offsetX = x - currentCenterX;
-                const offsetY = y - currentCenterY;
-                
-                if (Math.abs(offsetX) > 1 || Math.abs(offsetY) > 1) {
-                    await layerTranslate(createdLayer, offsetX, offsetY);
-                    logger.info(`Adjusted text "${text}" position by (${offsetX}, ${offsetY})`);
-                }
-            } catch (adjustError) {
-                logger.warn(`Position adjustment failed for "${text}": ${adjustError.message}`);
-            }
             return layerId;
         }
 
@@ -179,11 +164,7 @@ async function addGridNumbers(rows, cols) {
         await handleError(error, 'add_grid_numbers');
     }
 }
-/**
- * 안전한 그룹 생성 방식 - 레이어들을 선택한 후 그룹으로 만들기
- * @param {Array} layerIds - 그룹에 포함할 레이어 ID 배열
- * @param {string} groupName - 그룹 이름
- */
+// 안전한 그룹 생성 방식 - 레이어들을 선택한 후 그룹으로 만들기
 async function createGroupFromLayers(layerIds, groupName) {
     try {
         const doc = app.activeDocument;
@@ -220,30 +201,21 @@ async function createGroupFromLayers(layerIds, groupName) {
         logger.error(`Failed to create group "${groupName}":`, error);
     }
 }
-/**
- * 모든 가이드와 Num 그룹을 제거하는 함수
- */
+
+// 모든 가이드와 Num 그룹을 제거하는 함수
 async function clearGuides() {
     try {
         await executeAsModal(async () => {
-            // Num 그룹 제거
-            await removeGroupByName('Num');
-            
-            // 모든 가이드 제거
-            await clearAllGuides();
-            
-            logger.info('Cleared all guides and Num group');
+
+            await removeGroupByName('Num'); // Num 그룹 제거
+            await clearAllGuides(); // 모든 가이드 제거
             
         }, { commandName: 'Clear Guides' });
     } catch (error) {
         await handleError(error, 'clear_guides');
     }
 }
-
-/**
- * 특정 이름의 그룹을 제거하는 함수
- * @param {string} groupName - 제거할 그룹 이름
- */
+// 특정 이름의 그룹을 제거하는 함수
 async function removeGroupByName(groupName) {
     try {
         const doc = app.activeDocument;
