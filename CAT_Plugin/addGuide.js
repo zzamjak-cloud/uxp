@@ -2,8 +2,9 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide } = require('./lib/lib_guide');
-const { makeGroup, layerTranslate, moveLayerTarget, selectByLayerID } = require('./lib/lib_layer');
+const { layerTranslate, selectNoLays, selectByLayerID} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
+const { createSimpleTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
 
 const logger = new Logger('AddGuide');
@@ -90,54 +91,7 @@ async function createTextLayerReliable(text, x, y) {
         const doc = app.activeDocument;
         
         // 1. batchPlay를 사용하여 직접 텍스트 레이어 생성
-        const result = await batchPlay([
-            {
-                _obj: "make",
-                _target: [{ _ref: "textLayer" }],
-                using: {
-                    _obj: "textLayer",
-                    textKey: text,
-                    textShape: [
-                        {
-                            _obj: "textShape",
-                            char: { _enum: "char", _value: "paint" },
-                            orientation: { _enum: "orientation", _value: "horizontal" },
-                            transform: {
-                                _obj: "transform",
-                                xx: 1, xy: 0, yx: 0, yy: 1,
-                                tx: x, ty: y
-                            }
-                        }
-                    ],
-                    textStyleRange: [
-                        {
-                            _obj: "textStyleRange",
-                            from: 0,
-                            to: text.length,
-                            textStyle: {
-                                _obj: "textStyle",
-                                fontPostScriptName: "Arial-BoldMT",
-                                fontName: "Arial-BoldMT",
-                                size: { _unit: "pointsUnit", _value: 20 },
-                                color: { _obj: "RGBColor", red: 255, grain: 255, blue: 255 }
-                            }
-                        }
-                    ],
-                    paragraphStyleRange: [
-                        {
-                            _obj: "paragraphStyleRange",
-                            from: 0,
-                            to: text.length,
-                            paragraphStyle: {
-                                _obj: "paragraphStyle",
-                                align: { _enum: "alignmentType", _value: "center" }
-                            }
-                        }
-                    ]
-                },
-                _options: { dialogOptions: "dontDisplay" }
-            }
-        ], { synchronousExecution: true });
+        await createSimpleTextLayer(text, x, y);
 
         // 2. 생성 직후 약간의 지연
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -145,26 +99,16 @@ async function createTextLayerReliable(text, x, y) {
         // 3. 활성 레이어가 텍스트 레이어인지 확인 (가장 확실한 방법)
         let createdLayer = doc.activeLayer;
         
+        // 4. 텍스트 레이어 이름 설정
         if (createdLayer && createdLayer.kind === 'text') {
             const layerId = createdLayer.id;
             
-            // 4. 텍스트 레이어 이름 설정
             try {
-                await batchPlay([
-                    {
-                        _obj: "set",
-                        _target: [{ _ref: "layer", _enum: "ordinal", _value: "targetEnum" }],
-                        to: { _obj: "layer", name: `text_${text}` }, // 고유한 이름 사용
-                        _options: { dialogOptions: "dontDisplay" }
-                    }
-                ], { synchronousExecution: true });
-            } catch (nameError) {
-                // 이름 설정 실패해도 무시
-                logger.warn(`Failed to set layer name: ${nameError.message}`);
-            }
+                await setTextContent(text);
+            } 
+            catch (nameError) { logger.warn(`Failed to set layer name: ${nameError.message}`); }
             
-            // 5. 위치 미세 조정
-            try {
+            try {  // 위치 미세 조정
                 const bounds = createdLayer.bounds;
                 const currentCenterX = (bounds.left._value + bounds.right._value) / 2;
                 const currentCenterY = (bounds.top._value + bounds.bottom._value) / 2;
@@ -172,7 +116,6 @@ async function createTextLayerReliable(text, x, y) {
                 const offsetX = x - currentCenterX;
                 const offsetY = y - currentCenterY;
                 
-                // 오프셋이 있다면 조정
                 if (Math.abs(offsetX) > 1 || Math.abs(offsetY) > 1) {
                     await layerTranslate(createdLayer, offsetX, offsetY);
                     logger.info(`Adjusted text "${text}" position by (${offsetX}, ${offsetY})`);
@@ -180,25 +123,14 @@ async function createTextLayerReliable(text, x, y) {
             } catch (adjustError) {
                 logger.warn(`Position adjustment failed for "${text}": ${adjustError.message}`);
             }
-            
-            logger.info(`Successfully created text layer "${text}" with ID: ${layerId}`);
             return layerId;
         }
 
-        // 6. 활성 레이어로 찾지 못한 경우 최상위 레이어 확인
+        // 5. 활성화된 레이어가 텍스트 레이어인지 확인후 layerID 추출
         if (doc.layers.length > 0 && doc.layers[0].kind === 'text') {
             const layerId = doc.layers[0].id;
-            logger.info(`Found text layer via top layer: ${layerId}`);
             return layerId;
         }
-
-        // 7. 마지막 수단: batchPlay 결과에서 layerID 추출
-        if (result && result[0] && result[0].layerID) {
-            logger.info(`Found text layer via batchPlay result: ${result[0].layerID}`);
-            return result[0].layerID;
-        }
-
-        logger.warn(`Could not determine layer ID for text "${text}", but layer may have been created`);
         return null;
 
     } catch (error) {
@@ -260,13 +192,7 @@ async function createGroupFromLayers(layerIds, groupName) {
         const doc = app.activeDocument;
         
         // 1. 모든 선택 해제
-        await batchPlay([
-            {
-                _obj: "selectNoLayers",
-                _target: [{ _ref: "layer", _enum: "ordinal", _value: "targetEnum" }],
-                _options: { dialogOptions: "dontDisplay" }
-            }
-        ], { synchronousExecution: true });
+        await selectNoLays();
         
         // 2. 유효한 레이어들만 선택
         let selectedCount = 0;
