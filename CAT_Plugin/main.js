@@ -12,7 +12,7 @@ const { patchMaker } = require("./patchMaker");
 const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
 const { renamerLayers } = require("./renamerLayers");
 const { makeDocImportEntry} = require("./importFiles");
-const { addAllGuides } = require("./addGuide");
+const { addAllGuides, clearGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
 const { animationMatchLayers } = require("./animationMatchLayers");
 const { cleanPSD } = require("./cleanPSD");
@@ -86,6 +86,7 @@ document.getElementById("animationMatchLayers").addEventListener("click", animat
 document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
+document.getElementById("clearGuide").addEventListener("click", () => { clearGuides() });
 
 // 확장 UI 처리
 document.addEventListener("DOMContentLoaded", () => {
