@@ -2,13 +2,14 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide } = require('./lib/lib_guide');
-const { layerTranslate, selectNoLays, selectByLayerID} = require('./lib/lib_layer');
+const { layerTranslate, selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { createSimpleTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
 
 const logger = new Logger('AddGuide');
 
+// 개별 가이드 추가
 async function addGuide(axis) {
     const doc = app.activeDocument;
     
@@ -20,6 +21,7 @@ async function addGuide(axis) {
         await executeAsModal(() => {makeGuide(position, axis)}, {});
     }
 }
+// 모든 가이드 추가
 async function addAllGuides() {
     try {
         await executeAsModal(async () => {
@@ -79,13 +81,7 @@ async function addAllGuides() {
         console.error('Error adding all guides:', error);
     }
 }
-/**
- * 안정적인 텍스트 레이어 생성 함수 (완전히 독립적)
- * @param {string} text - 텍스트 내용
- * @param {number} x - X 좌표
- * @param {number} y - Y 좌표
- * @returns {number} 생성된 레이어의 ID
- */
+// 안정적인 텍스트 레이어 생성 함수
 async function createTextLayerReliable(text, x, y) {
     try {
         const doc = app.activeDocument;
@@ -138,6 +134,7 @@ async function createTextLayerReliable(text, x, y) {
         return null;
     }
 }
+// 전체 그리드 번호 추가
 async function addGridNumbers(rows, cols) {
     try {
         await executeAsModal(async () => {
@@ -201,33 +198,12 @@ async function createGroupFromLayers(layerIds, groupName) {
             
             try {
                 if (selectedCount === 0) {
-                    // 첫 번째 레이어 선택
-                    await batchPlay([
-                        {
-                            _obj: "select",
-                            _target: [{ _ref: "layer", _id: layerId }],
-                            makeVisible: false,
-                            _options: { dialogOptions: "dontDisplay" }
-                        }
-                    ], { synchronousExecution: true });
+                    await selectByLayerID(layerId);  // 첫 번째 레이어 선택
                 } else {
-                    // 추가 선택
-                    await batchPlay([
-                        {
-                            _obj: "select",
-                            _target: [{ _ref: "layer", _id: layerId }],
-                            selectionModifier: {
-                                _enum: "selectionModifierType",
-                                _value: "addToSelectionContinuous"
-                            },
-                            makeVisible: false,
-                            _options: { dialogOptions: "dontDisplay" }
-                        }
-                    ], { synchronousExecution: true });
+                    await addSelectLayer(layerId, layerIds);  // 추가 선택
                 }
                 selectedCount++;
-                logger.info(`Selected layer ${layerId} for grouping`);
-                
+
             } catch (selectError) {
                 logger.warn(`Failed to select layer ${layerId}: ${selectError.message}`);
             }
@@ -235,24 +211,7 @@ async function createGroupFromLayers(layerIds, groupName) {
         
         // 3. 선택된 레이어들로 그룹 생성
         if (selectedCount > 0) {
-            await batchPlay([
-                {
-                    _obj: "make",
-                    _target: [{ _ref: "layerSection" }],
-                    using: {
-                        _obj: "layerSection",
-                        name: groupName
-                    },
-                    from: {
-                        _ref: "layer",
-                        _enum: "ordinal",
-                        _value: "targetEnum"
-                    },
-                    _options: { dialogOptions: "dontDisplay" }
-                }
-            ], { synchronousExecution: true });
-            
-            logger.info(`Successfully created group "${groupName}" with ${selectedCount} layers`);
+            await makeGroupFromSelectLayers(groupName);
         } else {
             logger.warn(`No layers were selected for group "${groupName}"`);
         }
@@ -290,14 +249,7 @@ async function removeGroupByName(groupName) {
         const doc = app.activeDocument;
         for (const layer of doc.layers) {
             if (layer.name === groupName && layer.kind === 'group') {
-                await batchPlay([
-                    {
-                        _obj: "delete",
-                        _target: [{ _ref: "layer", _id: layer.id }],
-                        _options: { dialogOptions: "dontDisplay" }
-                    }
-                ], { synchronousExecution: true });
-                logger.info(`Removed group: ${groupName}`);
+                await deleteLayerByID(layer.id);
                 break;
             }
         }

@@ -179,6 +179,15 @@ async function deleteLayer() {
     );
 }
 
+// 레이어 ID로 삭제
+async function deleteLayerByID(layerID) {
+   await batchPlay([{
+      _obj: "delete",
+      _target: [{ _ref: "layer", _id: layerID }],
+      _options: { dialogOptions: "dontDisplay" }
+   }], { synchronousExecution: true });
+}
+
 // 레이어 이동
 async function layerTranslate(layer, x, y) {
     await layer.translate(x, y);
@@ -454,6 +463,26 @@ async function makeGroup(groupName) {
    );
 }
 
+// 선택된 레이어들로 그룹 생성
+async function makeGroupFromSelectLayers(groupName) {
+   await batchPlay([
+      {
+          _obj: "make",
+          _target: [{ _ref: "layerSection" }],
+          using: {
+              _obj: "layerSection",
+              name: groupName
+          },
+          from: {
+              _ref: "layer",
+              _enum: "ordinal",
+              _value: "targetEnum"
+          },
+          _options: { dialogOptions: "dontDisplay" }
+      }
+  ], { synchronousExecution: true });
+}
+
 // 그룹 해제
 async function ungroupLayers() {
    await batchPlay(
@@ -557,6 +586,37 @@ async function selectionForLayer() {
       ],
       {}
    );
+}
+
+// 레이어 ID 배열을 사용한 배치 선택
+async function selectAllFastLayersByID(layerIDs) {
+   for (const layerId of layerIds) {
+      if (!layerId) continue;
+      
+      try {
+         if (selectedCount === 0) {
+            // 첫 번째 레이어 선택
+            await selectByLayerID(layerId);
+         } else {
+            // 추가 선택
+            await batchPlay([
+               {
+                  _obj: "select",
+                  _target: [{ _ref: "layer", _id: layerId }],
+                  selectionModifier: {
+                     _enum: "selectionModifierType",
+                     _value: "addToSelectionContinuous"
+                  },
+                  makeVisible: false,
+                  _options: { dialogOptions: "dontDisplay" }
+               }
+            ], { synchronousExecution: true });
+         }
+            
+      } catch (selectError) {
+         logger.warn(`Failed to select layer ${layerId}: ${selectError.message}`);
+      }
+   }
 }
 
 // 레이어 ID 배열을 사용한 배치 선택
@@ -777,6 +837,7 @@ module.exports = {
    clearLayerEffect,    // 레이어 이펙트 제거
    createLay,           // 신규 레이어 생성
    deleteLayer,         // 레이어 삭제 
+   deleteLayerByID,     // 레이어 ID로 삭제
    duplicateLayer,      // 레이어 복제
    getLayerInfo,        // 레이어 정보 얻기
    getCurrentLayerPosition, // 레이어의 현재 위치값을 리턴
@@ -785,6 +846,7 @@ module.exports = {
    layTransform,        // 레이어 크기 조정
    layOpacity,          // 투명도 설정
    makeGroup,           // 그룹 생성
+   makeGroupFromSelectLayers, // 선택된 레이어들로 그룹 생성
    makeShape,           // Shape 생성
    makeWorkPath,        // WorkPath
    moveLayer,           // 레이어 인덱스 이동
@@ -795,6 +857,7 @@ module.exports = {
    selectNoLays,        // 레이어 선택 해제
    selectLayerByName,   // 이름으로 레이어 선택
    selectByLayerID,     // 레이어 ID로 선택
+   selectAllFastLayersByID, // 레이어 ID 배열을 사용한 배치 선택
    selectAllLayersByID, // 레이어 ID 배열을 사용한 배치 선택
    setLayerName,        // 레이어 이름 변경
    setLocking,          // 레이어 잠금 설정
