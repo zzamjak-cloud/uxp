@@ -184,6 +184,21 @@ async function deleteLayerByID(layerID) {
    }], { synchronousExecution: true });
 }
 
+// 특정 이름의 레이어를 제거하는 함수
+async function deleteLayerByName(layerName) {
+   try {
+       const doc = app.activeDocument;
+       for (const layer of doc.layers) {
+           if (layer.name === layerName) {
+               await deleteLayerByID(layer.id);
+               break;
+           }
+       }
+   } catch (error) {
+       logger.error(`Failed to remove layer "${layerName}":`, error);
+   }
+}
+
 // 레이어 이동
 async function layerTranslate(layer, x, y) {
     await layer.translate(x, y);
@@ -846,6 +861,7 @@ module.exports = {
    clearLayerEffect,    // 레이어 이펙트 제거
    createLay,           // 신규 레이어 생성
    deleteLayer,         // 레이어 삭제 
+   deleteLayerByName,   // 특정 이름의 레이어를 제거하는 함수
    deleteLayerByID,     // 레이어 ID로 삭제
    duplicateLayer,      // 레이어 복제
    getLayerInfo,        // 레이어 정보 얻기

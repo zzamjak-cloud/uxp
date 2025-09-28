@@ -2,25 +2,13 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
-const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID, mergeLayers} = require('./lib/lib_layer');
+const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID, deleteLayerByName, mergeLayers} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { createTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
 
 const logger = new Logger('AddGuide');
 
-// 개별 가이드 추가
-async function addGuide(axis) {
-    const doc = app.activeDocument;
-    
-    if (axis === 'vertical') {
-        let position = doc.width * 0.5;
-        await executeAsModal(() => {makeGuide(position, axis)}, {});
-    } else if (axis === 'horizontal') {
-        let position = doc.height * 0.5;
-        await executeAsModal(() => {makeGuide(position, axis)}, {});
-    }
-}
 // 모든 가이드 추가
 async function addAllGuides() {
     try {
@@ -50,11 +38,9 @@ async function addAllGuides() {
                 // *** 배치 처리로 최적화된 텍스트 레이어 생성 ***
                 const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
                 
-                // 'Num' 그룹 생성
+                // 'Num' 그룹 생성 후 merge하여 일반 레이어로 변경
                 if (textLayerIds.length > 0) {
                     await createGroupFromLayers(textLayerIds, 'Num');
-                    
-                    // 그룹을 merge하여 일반 레이어로 변경
                     await mergeLayers();
                 }
             }
@@ -70,7 +56,7 @@ async function addAllGuides() {
         console.error('Error adding all guides:', error);
     }
 }
-// 배치 처리로 텍스트 레이어들을 생성하는 함수
+// 배치 처리로 텍스트 레이어들을 생성하는 함수 (return : textLayerIds)
 async function createTextLayersBatch(rows, cols, sectionWidth, sectionHeight) {
     try {
         const doc = app.activeDocument;
@@ -190,80 +176,6 @@ async function createTextLayersBatch(rows, cols, sectionWidth, sectionHeight) {
     }
 }
 
-// 안정적인 텍스트 레이어 생성 함수 (개별 생성용 - 호환성 유지)
-async function createTextLayerReliable(text, x, y, rows, cols) {
-    try {
-        const doc = app.activeDocument;
-        
-        // 1. 텍스트 레이어 생성 (rows에 따라 텍스트 사이즈 설정)
-        if (rows < 10) {
-            await createTextLayer(text, x, y, "Arial-BoldMT", 30, 0, 0, 0, "center");
-        } else if (rows > 30) {
-            await createTextLayer(text, x, y, "Arial-BoldMT", 14, 0, 0, 0, "center");
-        } else {
-            await createTextLayer(text, x, y, "Arial-BoldMT", 18, 0, 0, 0, "center");
-        }
-
-        // 2. 생성 직후 약간의 지연
-        // await new Promise(resolve => setTimeout(resolve, 50));
-
-        // 3. 활성 레이어가 텍스트 레이어인지 확인하고 TextContent 설정
-        let createdLayer = doc.activeLayer;
-        if (createdLayer && createdLayer.kind === 'text') {
-            const layerId = createdLayer.id;
-            
-            try { await setTextContent(text); } 
-            catch (nameError) { logger.warn(`Failed to set layer name: ${nameError.message}`); }
-            
-            return layerId;
-        }
-
-        // 5. 활성화된 레이어가 텍스트 레이어인지 확인후 layerID 추출
-        if (doc.layers.length > 0 && doc.layers[0].kind === 'text') {
-            const layerId = doc.layers[0].id;
-            return layerId;
-        }
-        return null;
-
-    } catch (error) {
-        logger.error(`Failed to create text layer "${text}":`, error);
-        return null;
-    }
-}
-// 전체 그리드 번호 추가
-async function addGridNumbers(rows, cols) {
-    try {
-        await executeAsModal(async () => {
-            const doc = app.activeDocument;
-            
-            const sectionWidth = doc.width / cols;
-            const sectionHeight = doc.height / rows;
-            
-            // Num 생성 여부 확인
-            const generateNumbers = document.getElementById('generateNumbers')?.checked ?? true;
-            
-            if (generateNumbers) {
-                // 배치 처리로 텍스트 레이어 생성
-                const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
-                
-                // 안전한 그룹 생성
-                if (textLayerIds.length > 0) {
-                    await createGroupFromLayers(textLayerIds, 'Num');
-                    
-                    // 그룹을 merge하여 일반 레이어로 변경
-                    await mergeLayers();
-                }
-                
-                logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
-            } else {
-                logger.info(`Numbers generation disabled - no grid numbers created`);
-            }
-            
-        }, { commandName: 'Add Grid Numbers' });
-    } catch (error) {
-        await handleError(error, 'add_grid_numbers');
-    }
-}
 // 안전한 그룹 생성 방식 - 레이어들을 선택한 후 그룹으로 만들기
 async function createGroupFromLayers(layerIds, groupName) {
     try {
@@ -307,41 +219,12 @@ async function clearGuides() {
     try {
         await executeAsModal(async () => {
 
-            await removeLayerByName('Num'); // Num 레이어 제거
+            await deleteLayerByName('Num'); // Num 레이어 제거
             await clearAllGuides(); // 모든 가이드 제거
             
         }, { commandName: 'Clear Guides' });
     } catch (error) {
         await handleError(error, 'clear_guides');
-    }
-}
-// 특정 이름의 레이어를 제거하는 함수
-async function removeLayerByName(layerName) {
-    try {
-        const doc = app.activeDocument;
-        for (const layer of doc.layers) {
-            if (layer.name === layerName) {
-                await deleteLayerByID(layer.id);
-                break;
-            }
-        }
-    } catch (error) {
-        logger.error(`Failed to remove layer "${layerName}":`, error);
-    }
-}
-
-// 특정 이름의 그룹을 제거하는 함수 (호환성 유지)
-async function removeGroupByName(groupName) {
-    try {
-        const doc = app.activeDocument;
-        for (const layer of doc.layers) {
-            if (layer.name === groupName && layer.kind === 'group') {
-                await deleteLayerByID(layer.id);
-                break;
-            }
-        }
-    } catch (error) {
-        logger.error(`Failed to remove group "${groupName}":`, error);
     }
 }
 
