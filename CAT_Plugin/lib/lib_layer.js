@@ -826,6 +826,19 @@ async function moveLayerOffset(layer, x, y) {
    );
 }
 
+// 머지 레이어
+async function mergeLayers() {
+   await batchPlay(
+      [
+         {
+            _obj: "mergeLayersNew",
+            _isCommand: false
+         }
+      ],
+      {}
+   );
+}
+
 module.exports = {
    actionCommands,
    collectAllLayerIDsInOrder, // 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
@@ -845,6 +858,7 @@ module.exports = {
    makeGroupFromSelectLayers, // 선택된 레이어들로 그룹 생성
    makeShape,           // Shape 생성
    makeWorkPath,        // WorkPath
+   mergeLayers,         // 머지 레이어
    moveLayer,           // 레이어 인덱스 이동
    moveLayerOffset,     // 레이어 오프셋 이동
    moveLayerTarget,     // 레이어 타겟기준 인덱스 이동

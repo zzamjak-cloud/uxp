@@ -2,7 +2,7 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
-const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID} = require('./lib/lib_layer');
+const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID, mergeLayers} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { createTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
@@ -53,6 +53,9 @@ async function addAllGuides() {
                 // 'Num' 그룹 생성
                 if (textLayerIds.length > 0) {
                     await createGroupFromLayers(textLayerIds, 'Num');
+                    
+                    // 그룹을 merge하여 일반 레이어로 변경
+                    await mergeLayers();
                 }
             }
             
@@ -179,8 +182,6 @@ async function createTextLayersBatch(rows, cols, sectionWidth, sectionHeight) {
                 textLayerIds.push(layer.id);
             }
         }
-        
-        logger.info(`Created ${textLayerIds.length} text layers in batch for ${rows}x${cols} grid`);
         return textLayerIds;
         
     } catch (error) {
@@ -248,6 +249,9 @@ async function addGridNumbers(rows, cols) {
                 // 안전한 그룹 생성
                 if (textLayerIds.length > 0) {
                     await createGroupFromLayers(textLayerIds, 'Num');
+                    
+                    // 그룹을 merge하여 일반 레이어로 변경
+                    await mergeLayers();
                 }
                 
                 logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
@@ -298,12 +302,12 @@ async function createGroupFromLayers(layerIds, groupName) {
     }
 }
 
-// 모든 가이드와 Num 그룹을 제거하는 함수
+// 모든 가이드와 Num 레이어를 제거하는 함수
 async function clearGuides() {
     try {
         await executeAsModal(async () => {
 
-            await removeGroupByName('Num'); // Num 그룹 제거
+            await removeLayerByName('Num'); // Num 레이어 제거
             await clearAllGuides(); // 모든 가이드 제거
             
         }, { commandName: 'Clear Guides' });
@@ -311,7 +315,22 @@ async function clearGuides() {
         await handleError(error, 'clear_guides');
     }
 }
-// 특정 이름의 그룹을 제거하는 함수
+// 특정 이름의 레이어를 제거하는 함수
+async function removeLayerByName(layerName) {
+    try {
+        const doc = app.activeDocument;
+        for (const layer of doc.layers) {
+            if (layer.name === layerName) {
+                await deleteLayerByID(layer.id);
+                break;
+            }
+        }
+    } catch (error) {
+        logger.error(`Failed to remove layer "${layerName}":`, error);
+    }
+}
+
+// 특정 이름의 그룹을 제거하는 함수 (호환성 유지)
 async function removeGroupByName(groupName) {
     try {
         const doc = app.activeDocument;
