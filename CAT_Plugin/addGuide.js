@@ -43,15 +43,24 @@ async function addAllGuides() {
                 await makeGuide(position, 'vertical');
             }
             
-            // *** 배치 처리로 최적화된 텍스트 레이어 생성 ***
-            const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
+            // Num 생성 여부 확인
+            const generateNumbers = document.getElementById('generateNumbers')?.checked ?? true;
             
-            // 'Num' 그룹 생성
-            if (textLayerIds.length > 0) {
-                await createGroupFromLayers(textLayerIds, 'Num');
+            if (generateNumbers) {
+                // *** 배치 처리로 최적화된 텍스트 레이어 생성 ***
+                const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
+                
+                // 'Num' 그룹 생성
+                if (textLayerIds.length > 0) {
+                    await createGroupFromLayers(textLayerIds, 'Num');
+                }
             }
             
-            logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
+            if (generateNumbers) {
+                logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
+            } else {
+                logger.info(`Created guides only (numbers disabled) in ${rows}x${cols} grid`);
+            }
             
         }, { commandName: 'Add All Guides' });
     } catch (error) {
@@ -229,15 +238,22 @@ async function addGridNumbers(rows, cols) {
             const sectionWidth = doc.width / cols;
             const sectionHeight = doc.height / rows;
             
-            // 배치 처리로 텍스트 레이어 생성
-            const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
+            // Num 생성 여부 확인
+            const generateNumbers = document.getElementById('generateNumbers')?.checked ?? true;
             
-            // 안전한 그룹 생성
-            if (textLayerIds.length > 0) {
-                await createGroupFromLayers(textLayerIds, 'Num');
+            if (generateNumbers) {
+                // 배치 처리로 텍스트 레이어 생성
+                const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
+                
+                // 안전한 그룹 생성
+                if (textLayerIds.length > 0) {
+                    await createGroupFromLayers(textLayerIds, 'Num');
+                }
+                
+                logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
+            } else {
+                logger.info(`Numbers generation disabled - no grid numbers created`);
             }
-            
-            logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
             
         }, { commandName: 'Add Grid Numbers' });
     } catch (error) {
