@@ -2,9 +2,8 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
-const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID, deleteLayerByName, mergeLayers} = require('./lib/lib_layer');
+const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByName, mergeLayers} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
-const { createTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
 
 const logger = new Logger('AddGuide');
