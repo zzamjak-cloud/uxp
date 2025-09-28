@@ -2,7 +2,7 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
-const { layerTranslate, selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID} = require('./lib/lib_layer');
+const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByID} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
 const { createTextLayer, setTextContent } = require('./lib/lib_text');
 const { Logger } = require('./lib/logger');
@@ -43,43 +43,144 @@ async function addAllGuides() {
                 await makeGuide(position, 'vertical');
             }
             
-            // *** 수정된 부분: 그룹을 먼저 생성하지 않고 텍스트 생성 후 그룹화 ***
-            let number = 0;
-            const textLayerIds = [];
-            
-            // 각 셀에 번호 텍스트 생성
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    // 그리드 셀의 정확한 중앙 위치 계산
-                    const cellLeft = col * sectionWidth;
-                    const cellTop = row * sectionHeight;
-                    const cellRight = cellLeft + sectionWidth;
-                    const cellBottom = cellTop + sectionHeight;
-                    
-                    const centerX = (cellLeft + cellRight) * 0.5;
-                    const centerY = (cellTop + cellBottom) * 0.5 + 6;
-                    
-                    const layerId = await createTextLayerReliable(number.toString(), centerX, centerY, rows, cols);
-                    if (layerId) {
-                        textLayerIds.push(layerId);
-                    }
-                    number++;
-                }
-            }
+            // *** 배치 처리로 최적화된 텍스트 레이어 생성 ***
+            const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
             
             // 'Num' 그룹 생성
             if (textLayerIds.length > 0) {
                 await createGroupFromLayers(textLayerIds, 'Num');
             }
             
-            logger.info(`Created ${number} grid number texts in ${rows}x${cols} grid`);
+            logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
             
         }, { commandName: 'Add All Guides' });
     } catch (error) {
         console.error('Error adding all guides:', error);
     }
 }
-// 안정적인 텍스트 레이어 생성 함수
+// 배치 처리로 텍스트 레이어들을 생성하는 함수
+async function createTextLayersBatch(rows, cols, sectionWidth, sectionHeight) {
+    try {
+        const doc = app.activeDocument;
+        
+        // 텍스트 크기 결정 (그리드 크기에 따라)
+        let fontSize = 18;
+        if (rows < 10) {
+            fontSize = 30;
+        } else if (rows > 30) {
+            fontSize = 14;
+        }
+        
+        // 배치 처리를 위한 명령 배열 생성
+        const batchCommands = [];
+        let number = 0;
+        
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                // 그리드 셀의 정확한 중앙 위치 계산
+                const cellLeft = col * sectionWidth;
+                const cellTop = row * sectionHeight;
+                const cellRight = cellLeft + sectionWidth;
+                const cellBottom = cellTop + sectionHeight;
+                
+                const centerX = (cellLeft + cellRight) * 0.5;
+                const centerY = (cellTop + cellBottom) * 0.5 + 6;
+                
+                // 텍스트 레이어 생성 명령 추가
+                batchCommands.push({
+                    _obj: "make",
+                    _target: [
+                        {
+                            _ref: "textLayer"
+                        }
+                    ],
+                    using: {
+                        _obj: "textLayer",
+                        textKey: number.toString(),
+                        textShape: [
+                            {
+                                _obj: "textShape",
+                                transform: {
+                                    _obj: "transform",
+                                    xx: 1,
+                                    xy: 0,
+                                    yx: 0,
+                                    yy: 1,
+                                    tx: centerX,
+                                    ty: centerY
+                                }
+                            }
+                        ],
+                        textStyleRange: [
+                            {
+                                _obj: "textStyleRange",
+                                from: 0,
+                                to: number.toString().length,
+                                textStyle: {
+                                    _obj: "textStyle",
+                                    fontPostScriptName: "Arial-BoldMT",
+                                    fontName: "Arial-BoldMT",
+                                    size: {
+                                        _unit: "pointsUnit",
+                                        _value: fontSize
+                                    },
+                                    color: {
+                                        _obj: "RGBColor",
+                                        red: 0,
+                                        grain: 0,
+                                        blue: 0
+                                    }
+                                }
+                            }
+                        ],
+                        paragraphStyleRange: [
+                            {
+                                _obj: "paragraphStyleRange",
+                                from: 0,
+                                to: number.toString().length,
+                                paragraphStyle: {
+                                    _obj: "paragraphStyle",
+                                    align: {
+                                        _enum: "alignmentType",
+                                        _value: "center"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    layerID: 1,
+                    _options: {
+                        dialogOptions: "dontDisplay"
+                    }
+                });
+                
+                number++;
+            }
+        }
+        
+        // 배치로 모든 텍스트 레이어 생성
+        await batchPlay(batchCommands, {});
+        
+        // 생성된 텍스트 레이어들의 ID 수집
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const textLayerIds = [];
+        for (const layer of doc.layers) {
+            if (layer.kind === 'text') {
+                textLayerIds.push(layer.id);
+            }
+        }
+        
+        logger.info(`Created ${textLayerIds.length} text layers in batch for ${rows}x${cols} grid`);
+        return textLayerIds;
+        
+    } catch (error) {
+        logger.error('Failed to create text layers in batch:', error);
+        return [];
+    }
+}
+
+// 안정적인 텍스트 레이어 생성 함수 (개별 생성용 - 호환성 유지)
 async function createTextLayerReliable(text, x, y, rows, cols) {
     try {
         const doc = app.activeDocument;
@@ -128,36 +229,15 @@ async function addGridNumbers(rows, cols) {
             const sectionWidth = doc.width / cols;
             const sectionHeight = doc.height / rows;
             
-            let number = 0;
-            const textLayerIds = [];
-            
-            // 각 셀에 번호 텍스트 생성
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const cellLeft = col * sectionWidth;
-                    const cellTop = row * sectionHeight;
-                    const cellRight = cellLeft + sectionWidth;
-                    const cellBottom = cellTop + sectionHeight;
-                    
-                    const centerX = (cellLeft + cellRight) / 2;
-                    const centerY = (cellTop + cellBottom) / 2;
-                    
-                    logger.info(`Creating text "${number}" at cell center (${centerX}, ${centerY}) for cell [${row}, ${col}]`);
-                    
-                    const layerId = await createTextLayerReliable(number.toString(), centerX, centerY);
-                    if (layerId) {
-                        textLayerIds.push(layerId);
-                    }
-                    number++;
-                }
-            }
+            // 배치 처리로 텍스트 레이어 생성
+            const textLayerIds = await createTextLayersBatch(rows, cols, sectionWidth, sectionHeight);
             
             // 안전한 그룹 생성
             if (textLayerIds.length > 0) {
                 await createGroupFromLayers(textLayerIds, 'Num');
             }
             
-            logger.info(`Created ${number} grid number texts in ${rows}x${cols} grid`);
+            logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
             
         }, { commandName: 'Add Grid Numbers' });
     } catch (error) {

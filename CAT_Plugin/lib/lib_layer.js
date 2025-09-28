@@ -14,21 +14,17 @@ function collectAllLayerIDsInOrder(layers, layerIDs) {
 
 // 신규 레이어 생성
 async function createLay() {
-   await batchPlay(
-      [
+   await batchPlay
+   ([{
+      _obj: "make",
+      _target: [
          {
-            _obj: "make",
-            _target: [
-               {
-                  _ref: "layer"
-               }
-            ],
-            _options: {
-               dialogOptions: "dontDisplay"
-            }
+            _ref: "layer"
          }
       ],
-      {}
+      _options: {
+         dialogOptions: "dontDisplay"
+      }}],{}
    );
 }
 
