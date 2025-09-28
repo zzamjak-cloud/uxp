@@ -311,8 +311,6 @@ async function removeGroupByName(groupName) {
 }
 
 module.exports = {
-    addGuide,
     addAllGuides,
-    addGridNumbers,
     clearGuides
 };
