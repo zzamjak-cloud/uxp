@@ -75,6 +75,33 @@ async function docResizeImage(doc, size, sampleMethodName) {
    );
 }
 
+// docResizeImage 옵션 설정
+async function docResizeOptions(doc, width, height, unitValue = 'pixelsUnit', interpolationValue = 'nearestNeighbor') {
+   await batchPlay(
+       [{
+           _obj: "imageSize",
+           constrainProportions: true,
+           width: {
+               _unit: unitValue,
+               _value: width
+           },
+           height: {
+               _unit: unitValue,
+               _value: height
+           },
+           interfaceIconFrameDimmed: false,
+           scaleStyles: true,
+           useHistogram: false,
+           interpolation: {
+               _enum: "interpolationType",
+               _value: interpolationValue
+           }
+       }],
+       { synchronousExecution: true }
+   );
+}
+
+
 async function docCloseWithoutSaving(doc) {
     await doc.closeWithoutSaving();
 }
@@ -121,6 +148,7 @@ module.exports = {
     docDuplicate,             // 문서 복사
     docResizeCanvas,          // 문서 크기 조정
     docResizeImage,           // 문서 이미지 크기 조정
+    docResizeOptions,         // 문서 이미지 크기 조정 (옵션 설정)
     docCloseWithoutSaving,   // 문서 닫기 (저장하지 않음)
     createDocCopyLayers,     // 문서 복사 (레이어 복사)
     layerVisible             // 레이어 보이기/숨기기

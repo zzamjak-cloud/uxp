@@ -1,6 +1,6 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
-const { setLayerName, selectByLayerID } = require("./lib/lib_layer");
+const { setLayerName, selectByLayerID, addSelectLayerIndividual } = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
 const { Logger } = require("./lib/logger");
 
@@ -84,6 +84,33 @@ async function renameLayer(layer, newName) {
     }
 }
 
+// 원래 선택 상태 복원
+async function restoreOriginalSelection(originalLayerIDs) {
+    try {
+        if (originalLayerIDs.length === 0) {
+            return;
+        }
+
+        logger.info(`Restoring selection for ${originalLayerIDs.length} layers`);
+        
+        // 첫 번째 레이어 선택
+        await selectByLayerID(originalLayerIDs[0]);
+        
+        // 나머지 레이어들을 개별적으로 추가 선택
+        for (let i = 1; i < originalLayerIDs.length; i++) {
+            try {
+                await addSelectLayerIndividual(originalLayerIDs[i]);
+            } catch (error) {
+                logger.warn(`Failed to add layer ${originalLayerIDs[i]} to selection: ${error.message}`);
+            }
+        }
+        
+        logger.info(`Selection restored: ${originalLayerIDs.length} layers`);
+    } catch (error) {
+        logger.error(`Failed to restore original selection: ${error.message}`);
+    }
+}
+
 // 메인 함수
 async function renamerLayers(type) {
     try {
@@ -99,6 +126,10 @@ async function renamerLayers(type) {
 
         // 입력값 검증
         validateInputs(type, text, replaceText);
+
+        // 처음 선택된 레이어들의 ID를 저장
+        const originalLayerIDs = actLays.map(layer => layer.id);
+        logger.info(`Original selection saved: ${originalLayerIDs.length} layers`);
 
         let processedCount = 0;
         const totalLayers = actLays.length;
@@ -118,6 +149,9 @@ async function renamerLayers(type) {
             }
 
             logger.info('Rename operation completed successfully');
+            
+            // 원래 선택 상태 복원
+            await restoreOriginalSelection(originalLayerIDs);
         }, { commandName: "Rename Layers" });
 
     } catch (error) {
@@ -127,7 +161,4 @@ async function renamerLayers(type) {
 
 module.exports = {
     renamerLayers,
-    // Export for testing
-    validateInputs,
-    generateNewName
 };

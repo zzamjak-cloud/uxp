@@ -17,6 +17,7 @@ const { applyGridLayout } = require("./applyGridLayout");
 const { animationMatchLayers } = require("./animationMatchLayers");
 const { cleanPSD } = require("./cleanPSD");
 const { clearHiddenEffects } = require("./clearHiddenEffects");
+const { splitToLayers } = require("./splitToLayers");
 
 // 경로 설정 객체
 const pathConfig = {
@@ -84,6 +85,7 @@ document.getElementById("appiconmakerDot").addEventListener("click", () => appIc
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
 document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
+document.getElementById("splitToLayers").addEventListener("click", splitToLayers);
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
 document.getElementById("clearGuide").addEventListener("click", () => { clearGuides() });

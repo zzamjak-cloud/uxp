@@ -128,6 +128,32 @@ async function addSelectLayer(layerID, layerID_array) {
    );
 }
 
+// 개별 레이어 선택 추가 (연속 선택이 아닌 개별 선택)
+async function addSelectLayerIndividual(layerID) {
+   await batchPlay(
+      [
+         {
+            _obj: "select",
+            _target: [
+               {
+                  _ref: "layer",
+                  _id: layerID
+               }
+            ],
+            selectionModifier: {
+               _enum: "selectionModifierType",
+               _value: "addToSelection"
+            },
+            makeVisible: false,
+            _options: {
+               dialogOptions: "dontDisplay"
+            }
+         }
+      ],
+      {}
+   );
+}
+
 // 레이어 선택 해제
 async function selectNoLays() {
     await batchPlay(
@@ -846,18 +872,74 @@ async function mergeLayers() {
    await batchPlay(
       [
          {
-            _obj: "mergeLayersNew",
-            _isCommand: false
+            "_obj": "mergeLayersNew",
+            "apply": true,
+            "_isCommand": false
          }
       ],
       {}
    );
 }
 
+/**
+ * 레이어 래스터화
+ */
+async function rasterizeLayer() {
+   try {
+       await batchPlay([
+           {
+               _obj: "rasterizeLayer",
+               _target: [{
+                   _ref: "layer",
+                   _enum: "ordinal",
+                   _value: "targetEnum"
+               }],
+               what: {
+                   _enum: "rasterizeItem",
+                   _value: "entireLayer"
+               }
+           }
+       ], {});
+   } catch (error) {
+       // 이미 래스터화된 레이어인 경우 무시
+       console.log('Layer already rasterized or rasterization not needed');
+   }
+}
+
+// 마스크 제거
+async function removeMask() {
+   await batchPlay([
+      {
+         _obj: "delete",
+         _target: [{
+               _ref: "channel",
+               _enum: "channel",
+               _value: "mask"
+         }],
+         apply: true
+      }
+   ], {});
+}
+
+// WorkPath 정보 얻기
+async function getWorkPath() {
+   const result = await batchPlay([
+      {
+          _obj: "get",
+          _target: [{
+              _ref: "path",
+              _property: "workPath"
+          }]
+      }
+   ], {});
+   return result;
+}
+
 module.exports = {
    actionCommands,
    collectAllLayerIDsInOrder, // 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
    addSelectLayer,      // 레이어 선택 추가
+   addSelectLayerIndividual, // 개별 레이어 선택 추가 (연속 선택이 아닌 개별 선택)
    clearLayerEffect,    // 레이어 이펙트 제거
    createLay,           // 신규 레이어 생성
    deleteLayer,         // 레이어 삭제 
@@ -866,6 +948,7 @@ module.exports = {
    duplicateLayer,      // 레이어 복제
    getLayerInfo,        // 레이어 정보 얻기
    getCurrentLayerPosition, // 레이어의 현재 위치값을 리턴
+   getWorkPath,         // WorkPath 정보 얻기
    layerTranslate,      // 레이어 이동
    layerTrim,           // 레이어 트림
    layTransform,        // 레이어 크기 조정
@@ -878,6 +961,8 @@ module.exports = {
    moveLayer,           // 레이어 인덱스 이동
    moveLayerOffset,     // 레이어 오프셋 이동
    moveLayerTarget,     // 레이어 타겟기준 인덱스 이동
+   rasterizeLayer,      // 레이어 래스터화
+   removeMask,          // 마스크 제거
    relinkToFile,        // 파일 재연결
    reorderEffect,       // 이펙트 재정렬
    selectNoLays,        // 레이어 선택 해제

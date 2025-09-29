@@ -27,13 +27,24 @@ async function exportSelectedFile(pathId, fileType) {
             throw new Error('레이어를 선택해주세요.');
         }
 
-        // 선택된 레이어가 그룹 또는 스마트 오브젝트인지 확인
-        const validLayers = selectedLayers.filter(layer => 
-            layer.kind === 'group' || layer.kind === 'smartObject'
-        );
+        // fileType에 따른 유효한 레이어 필터링
+        let validLayers;
+        if (fileType === 'png') {
+            // PNG일 경우 모든 레이어 타입 허용
+            validLayers = selectedLayers;
+        } else {
+            // PSD일 경우 그룹 또는 스마트 오브젝트만 허용
+            validLayers = selectedLayers.filter(layer => 
+                layer.kind === 'group' || layer.kind === 'smartObject'
+            );
+        }
 
         if (validLayers.length === 0) {
-            throw new Error('그룹 레이어 또는 스마트 오브젝트를 선택해주세요.');
+            if (fileType === 'png') {
+                throw new Error('레이어를 선택해주세요.');
+            } else {
+                throw new Error('그룹 레이어 또는 스마트 오브젝트를 선택해주세요.');
+            }
         }
 
         // 저장 폴더 경로 가져오기
