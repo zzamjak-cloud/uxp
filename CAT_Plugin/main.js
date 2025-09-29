@@ -18,6 +18,7 @@ const { animationMatchLayers } = require("./animationMatchLayers");
 const { cleanPSD } = require("./cleanPSD");
 const { clearHiddenEffects } = require("./clearHiddenEffects");
 const { splitToLayers } = require("./splitToLayers");
+const { clearEmptyLayers } = require("./clearEmptyLayers");
 
 // 경로 설정 객체
 const pathConfig = {
@@ -64,6 +65,7 @@ document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
 document.getElementById("clearHiddenFX").addEventListener("click", () => {clearHiddenEffects()});
+document.getElementById("clearEmptyLayers").addEventListener("click", () => {clearEmptyLayers()});
 
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
