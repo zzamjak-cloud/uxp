@@ -10,7 +10,7 @@ const { savePngAndLinkToPSD } = require("./exportSelectedAndLink");
 const { appIconMaker, appIconPSDGenerate } = require("./appIconMaker");
 const { patchMaker } = require("./patchMaker");
 const { sortingLayer, pickSortingLayer } = require("./sortingLayer");
-const { renamerLayers } = require("./renamerLayers");
+const { renamerLayers, setupPresetEventListeners } = require("./renamerLayers");
 const { makeDocImportEntry} = require("./importFiles");
 const { addAllGuides, clearGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
@@ -99,6 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
     expandUI("exportExpandableUI", "exportExpandButton", "EXPORT");
     expandUI("importExpandableUI", "importExpandButton", "IMPORT");
     expandUI("guideExpandableUI", "guideExpandButton", "GUIDE");
+    
+    // 프리셋 이벤트 리스너 설정
+    setupPresetEventListeners();
 });
 
 // 플러그인 로드시 getPath 버튼 정보 표기, 만약 기존에 연결해둔 것이 있다면, 그대로 표기

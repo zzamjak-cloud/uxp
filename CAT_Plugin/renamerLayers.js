@@ -3,8 +3,212 @@ const { executeAsModal } = require('photoshop').core;
 const { setLayerName, selectByLayerID, addSelectLayerIndividual } = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
 const { Logger } = require("./lib/logger");
+const { showAlert } = require("./lib/lib");
 
 const logger = new Logger('LayerRenamer');
+
+// 프리셋 관리 클래스
+class PresetManager {
+    constructor() {
+        this.storageKey = 'layerRenamerPresets';
+        this.maxPresets = 6;
+        this.presets = this.loadPresets();
+    }
+
+    // 로컬 스토리지에서 프리셋 로드
+    loadPresets() {
+        try {
+            const stored = localStorage.getItem(this.storageKey);
+            return stored ? JSON.parse(stored) : [];
+        } catch (error) {
+            logger.error(`Failed to load presets: ${error.message}`);
+            return [];
+        }
+    }
+
+    // 로컬 스토리지에 프리셋 저장
+    savePresets() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.presets));
+            logger.info(`Saved ${this.presets.length} presets`);
+        } catch (error) {
+            logger.error(`Failed to save presets: ${error.message}`);
+        }
+    }
+
+    // 프리셋 추가
+    addPreset(text) {
+        if (this.presets.length >= this.maxPresets) {
+            throw new Error(`최대 ${this.maxPresets}개의 프리셋만 추가할 수 있습니다.`);
+        }
+        
+        if (!text || text.trim() === '') {
+            throw new Error('프리셋 텍스트를 입력해주세요.');
+        }
+
+        const trimmedText = text.trim();
+        if (this.presets.includes(trimmedText)) {
+            throw new Error('이미 존재하는 프리셋입니다.');
+        }
+
+        this.presets.push(trimmedText);
+        this.savePresets();
+        logger.info(`Added preset: ${trimmedText}`);
+    }
+
+    // 프리셋 제거
+    removePreset(text) {
+        const index = this.presets.indexOf(text);
+        if (index > -1) {
+            this.presets.splice(index, 1);
+            this.savePresets();
+            logger.info(`Removed preset: ${text}`);
+        }
+    }
+
+    // 모든 프리셋 가져오기
+    getAllPresets() {
+        return [...this.presets];
+    }
+
+    // 프리셋 존재 여부 확인
+    hasPreset(text) {
+        return this.presets.includes(text);
+    }
+}
+
+// 전역 프리셋 매니저 인스턴스
+const presetManager = new PresetManager();
+
+// 프리셋 UI 관리 함수들
+function createPresetItem(text) {
+    const presetItem = document.createElement('div');
+    presetItem.className = 'preset-item';
+    presetItem.setAttribute('data-text', text);
+
+    // 텍스트 표시 (읽기 전용)
+    const textDisplay = document.createElement('span');
+    textDisplay.className = 'preset-text';
+    textDisplay.textContent = text;
+
+    // 선택 버튼 (V 표시)
+    const selectButton = document.createElement('sp-action-button');
+    selectButton.className = 'preset-select';
+    selectButton.textContent = '✓';
+    selectButton.title = '선택';
+    selectButton.addEventListener('click', () => {
+        const renameTextField = document.getElementById('renameText');
+        if (renameTextField) {
+            renameTextField.value = text;
+            logger.info(`Applied preset: ${text}`);
+        }
+    });
+
+    // 제거 버튼
+    const removeButton = document.createElement('sp-action-button');
+    removeButton.className = 'preset-remove';
+    removeButton.textContent = '×';
+    removeButton.title = '제거';
+    removeButton.addEventListener('click', () => {
+        presetManager.removePreset(text);
+        presetItem.remove();
+        logger.info(`Removed preset: ${text}`);
+    });
+
+    presetItem.appendChild(textDisplay);
+    presetItem.appendChild(selectButton);
+    presetItem.appendChild(removeButton);
+
+    return presetItem;
+}
+
+function renderPresets() {
+    const container = document.getElementById('presetContainer');
+    if (!container) return;
+
+    // 기존 프리셋들 제거
+    container.innerHTML = '';
+
+    // 저장된 프리셋들 렌더링
+    const presets = presetManager.getAllPresets();
+    presets.forEach(preset => {
+        const presetItem = createPresetItem(preset);
+        container.appendChild(presetItem);
+    });
+}
+
+async function addNewPreset() {
+    try {
+        const renameTextField = document.getElementById('renameText');
+        if (!renameTextField) {
+            throw new Error('텍스트 입력 필드를 찾을 수 없습니다.');
+        }
+
+        const text = renameTextField.value.trim();
+        if (!text) {
+            // 텍스트 필드에 포커스하고 placeholder를 강조
+            renameTextField.focus();
+            renameTextField.placeholder = '⚠️ 먼저 텍스트를 입력해주세요!';
+            throw new Error('텍스트를 입력한 후 프리셋을 추가해주세요.');
+        }
+
+        presetManager.addPreset(text);
+        renderPresets();
+        
+        // 성공 메시지 (선택사항)
+        logger.info(`프리셋이 추가되었습니다: ${text}`);
+        
+        // 성공 시 텍스트 필드 초기화 및 포커스
+        renameTextField.value = '';
+        renameTextField.placeholder = 'Enter Text';
+        renameTextField.focus();
+        
+    } catch (error) {
+        logger.error(`Failed to add preset: ${error.message}`);
+        console.error(`프리셋 추가 실패: ${error.message}`);
+        
+        // showAlert를 사용하여 에러 메시지 표시
+        await showAlert(error.message);
+        
+        // 에러 메시지를 텍스트 필드에 임시로 표시
+        const renameTextField = document.getElementById('renameText');
+        if (renameTextField) {
+            const originalValue = renameTextField.value;
+            const originalPlaceholder = renameTextField.placeholder;
+            
+            renameTextField.value = `오류: ${error.message}`;
+            renameTextField.style.color = '#ff6b6b';
+            
+            // 3초 후 원래 값으로 복원
+            setTimeout(() => {
+                renameTextField.value = originalValue;
+                renameTextField.placeholder = originalPlaceholder;
+                renameTextField.style.color = '';
+            }, 3000);
+        }
+    }
+}
+
+// 프리셋 관련 이벤트 리스너 설정
+function setupPresetEventListeners() {
+    // + 버튼 클릭 이벤트
+    const addPresetButton = document.getElementById('addPreset');
+    if (addPresetButton) {
+        addPresetButton.addEventListener('click', addNewPreset);
+    }
+
+    // 페이지 로드 시 기존 프리셋들 렌더링
+    document.addEventListener('DOMContentLoaded', () => {
+        renderPresets();
+    });
+
+    // DOM이 이미 로드된 경우 즉시 렌더링
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderPresets);
+    } else {
+        renderPresets();
+    }
+}
 
 const RENAME_TYPES = {
     PREFIX: 'prefix',       // 앞에 텍스트 추가
@@ -161,4 +365,7 @@ async function renamerLayers(type) {
 
 module.exports = {
     renamerLayers,
+    setupPresetEventListeners,
+    renderPresets,
+    presetManager
 };
