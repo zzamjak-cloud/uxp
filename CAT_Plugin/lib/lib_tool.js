@@ -1,5 +1,6 @@
 const { batchPlay } = require("photoshop").action;
 
+// 직사각형 선택
 async function rectangularMarqueeTool(top_value, left_value, bottom_value, right_value) {
     console.log("Marquee Selection");
     await batchPlay(
@@ -40,6 +41,7 @@ async function rectangularMarqueeTool(top_value, left_value, bottom_value, right
     );
 }
 
+// 전경색 설정
 async function setForegroundColor(r, g, b) {
    const result = await batchPlay(
       [
@@ -67,6 +69,7 @@ async function setForegroundColor(r, g, b) {
    );
 }
 
+// 채우기 색상 설정
 // value : "forgroundColor", "backgroundColor"
 async function fillColor(value) {
    const result = await batchPlay(

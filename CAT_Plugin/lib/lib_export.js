@@ -1,5 +1,6 @@
 const { batchPlay } = require("photoshop").action;
 
+// PNG 저장
 async function saveForWebPNG(file_name, folder_token, file_token) {
    const action = {
       _obj: "export",
@@ -11,11 +12,11 @@ async function saveForWebPNG(file_name, folder_token, file_token) {
          },
          $DIDr: true,
          in: {
-            _path: folder_token,
+            _path: folder_token,  // 저장경로
             _kind: "local"
          },
-         pathName: file_token,
-         $ovFN: file_name,
+         pathName: file_token,   // 파일경로
+         $ovFN: file_name,       // 파일이름
          format: {
             _enum: "$IRFm",
             _value: "$PN24"
@@ -209,7 +210,8 @@ async function saveForWebPNG(file_name, folder_token, file_token) {
    }
    await batchPlay ([action], {})
 }
- 
+
+// JPG 저장
 async function saveForWebJPG(file_name, folder_token, file_token) {
    const action = {
       _obj: "export",
@@ -427,6 +429,7 @@ async function saveForWebJPG(file_name, folder_token, file_token) {
    await batchPlay ([action], {})
 }
 
+// PSD 저장
 async function saveAsPSD(file_psd_token) {
    const action = {
       _obj: "save",

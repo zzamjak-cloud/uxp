@@ -12,6 +12,7 @@ async function deselectAll() {
     );
 }
 
+// 투명도 기반 선택 영역 생성
 async function selectionAreaTransparency() {
     await batchPlay([
         {
@@ -29,6 +30,7 @@ async function selectionAreaTransparency() {
     ], {});
 }
 
+// 선택 영역 확장
 async function selectionExpand(tolerance) {
     await batchPlay([
         {

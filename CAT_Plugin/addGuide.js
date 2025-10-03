@@ -4,6 +4,7 @@ const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
 const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByName, mergeLayers} = require('./lib/lib_layer');
 const { handleError } = require('./lib/errorHandler');
+const { GUIDE } = require('./lib/constants');
 const { Logger } = require('./lib/logger');
 
 const logger = new Logger('AddGuide');
@@ -20,14 +21,14 @@ async function addAllGuides() {
             const sectionHeight = doc.height / rows;
             for (let i = 1; i < rows; i++) {
                 const position = sectionHeight * i;
-                await makeGuide(position, 'horizontal');
+                await makeGuide(position, GUIDE.ORIENTATIONS.HORIZONTAL);
             }
             
             // 수직 가이드 생성 (열)
             const sectionWidth = doc.width / cols;
             for (let i = 1; i < cols; i++) {
                 const position = sectionWidth * i;
-                await makeGuide(position, 'vertical');
+                await makeGuide(position, GUIDE.ORIENTATIONS.VERTICAL);
             }
             
             // Num 생성 여부 확인

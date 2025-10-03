@@ -1,6 +1,7 @@
 // lib/errorHandler.js
 
 const { showAlert } = require('./lib');
+const { ERROR_MESSAGES } = require('./constants');
 
 class PhotoshopError extends Error {
     constructor(message, operation, details = '') {
@@ -18,16 +19,16 @@ async function handleError(error, operation) {
     
     switch (operation) {
         case 'file_operation':
-            userMessage += '적절한 권한이 있는지 확인하세요.';
+            userMessage += ERROR_MESSAGES.NO_PERMISSION;
             break;
         case 'layer_operation':
-            userMessage += '레이어를 선택하세요.';
+            userMessage += ERROR_MESSAGES.NO_SELECTION_LAYERS;
             break;
         case 'smart_object':
-            userMessage += '스마트 오브젝트를 확인하세요.';
+            userMessage += ERROR_MESSAGES.NO_SMART_OBJECT;
             break;
         case 'export':
-            userMessage += '접근 가능한지 확인하세요.';
+            userMessage += ERROR_MESSAGES.NO_PERMISSION;
             break;
         default:
             userMessage += `${operation} 실행중... 다시 시도하세요.`;

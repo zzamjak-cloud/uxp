@@ -1,6 +1,7 @@
 // ContiguityMask 채널 선택
 const { batchPlay } = require('photoshop').action;
 
+// 채널 선택
 async function selectMaskByName(channelName = "ContiguityMask") {
     await batchPlay([
         {
@@ -13,6 +14,7 @@ async function selectMaskByName(channelName = "ContiguityMask") {
     ], {});
 }
 
+// RGB 채널 선택
 async function selectRGBChannel() {
     await batchPlay([
     {

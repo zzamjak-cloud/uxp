@@ -15,8 +15,10 @@ const {
     rasterizeLayer,
     removeMask,
     setLayerName, 
-    selectByLayerID
+    selectByLayerID,
+    createLayerRenameCommands
 } = require('./lib/lib_layer');
+const { executeModalWithHistoryGrouping } = require('./lib/lib');
 const { deselectAll, selectionAreaTransparency, selectionExpand, setBoundsRegion } = require('./lib/lib_select');
 const logger = new Logger('SplitToLayers');
 
@@ -41,12 +43,16 @@ async function splitToLayers() {
             suffix: "_",
             addCount: true,
             confirmThreshold: 20,
-            padding: 1  // 패딩 값 (픽셀)
+            padding: 0  // 패딩 값 (픽셀)
         };
         
-        await executeAsModal(async () => {
-            await splitOperationBounds(activeLayer, config);
-        }, { commandName: "Split to Layers" });
+        await executeModalWithHistoryGrouping(
+            async (context) => {
+                await splitOperationBounds(activeLayer, config);
+            },
+            "레이어 분할",  // 히스토리 이름
+            "Split to Layers"  // 명령 이름
+        );
 
     } catch (error) {
         await handleError(error, 'split_to_layers');
@@ -263,14 +269,43 @@ function calculateRegionBounds(region, padding) {
 async function createLayersFromBounds(baseLayer, regionBounds, config) {
     
     let successCount = 0;
+    const layerNamePairs = []; // 레이어 이름 변경을 위한 배열
     
+    // 1. 모든 레이어 생성 (이름 변경 없이)
     for (let i = 0; i < regionBounds.length; i++) {
         try {
-            await createLayerFromBounds(baseLayer, regionBounds[i], config, i + 1);
-            successCount++;
+            const layerID = await createLayerFromBounds(baseLayer, regionBounds[i], config, i + 1);
+            if (layerID) {
+                const layerName = generateLayerName(baseLayer.name, config, i + 1);
+                layerNamePairs.push({
+                    layerID: layerID,
+                    newName: layerName
+                });
+                successCount++;
+            }
         } catch (error) {
             logger.error(`Failed to create layer ${i + 1}`, error);
             // 에러가 발생해도 계속 진행
+        }
+    }
+    
+    // 2. 모든 레이어 이름을 배치로 변경
+    if (layerNamePairs.length > 0) {
+        try {
+            const batchCommands = createLayerRenameCommands(layerNamePairs);
+            await batchPlay(batchCommands, {});
+            logger.info(`Batch renamed ${layerNamePairs.length} layers`);
+        } catch (error) {
+            logger.error('Failed to batch rename layers:', error);
+            // 개별적으로 이름 변경 시도
+            for (const { layerID, newName } of layerNamePairs) {
+                try {
+                    await selectByLayerID(layerID);
+                    await setLayerName(newName);
+                } catch (renameError) {
+                    logger.error(`Failed to rename layer ${layerID}:`, renameError);
+                }
+            }
         }
     }
     
@@ -288,7 +323,7 @@ async function createLayerFromBounds(baseLayer, bounds, config, layerIndex) {
         await setBoundsRegion("rectangle", bounds);
         if (!app.activeDocument.selection.bounds) {
             logger.warn(`No selection found for bounds at (${bounds.x}, ${bounds.y})`);
-            return;
+            return null;
         }
 
         await createMaskFromSelection("revealSelection");  // 선택 영역을 마스크로 변환
@@ -297,9 +332,9 @@ async function createLayerFromBounds(baseLayer, bounds, config, layerIndex) {
         await createLay();    // 신규 레이어 생성
         await mergeLayers();  // 머지 레이어
         
-        // 6. 레이어 이름 설정
-        const layerName = generateLayerName(baseLayer.name, config, layerIndex);
-        await setLayerName(layerName);
+        // 3. 생성된 레이어의 ID 반환
+        const activeLayer = app.activeDocument.activeLayers[0];
+        return activeLayer ? activeLayer.id : null;
         
     } catch (error) {
         logger.error(`Failed to create layer from bounds at (${bounds.x}, ${bounds.y})`, error);

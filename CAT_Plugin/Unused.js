@@ -1,4 +1,7 @@
 
+const { actionCommands } = require("./lib/lib_layer");
+const { COMMAND } = require('./lib/constants');
+
 // 향상된 선택 레이어 PNG 내보내기 (미사용)
 async function exportOnlySelectedLayers() {
     try {
@@ -113,7 +116,7 @@ async function exportGroupLayerToPNG(groupLayer, folder, folderToken, maintainDo
         
         // 모든 레이어를 하나로 합치기 (그룹의 모든 내용을 하나의 이미지로)
         if (newDoc.layers.length > 1) {
-            await actionCommands("mergeVisible");
+            await actionCommands(COMMAND.MERGE_VISIBLE);
         }
         
         // 문서 크기 유지 옵션에 따른 처리

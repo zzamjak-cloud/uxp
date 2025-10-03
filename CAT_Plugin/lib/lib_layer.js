@@ -1,4 +1,6 @@
 const { batchPlay } = require("photoshop").action;
+const { executeAsModal } = require('photoshop').core;
+const { COMMAND } = require('./constants');
 
 // 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
 function collectAllLayerIDsInOrder(layers, layerIDs) {
@@ -53,6 +55,61 @@ async function setLayerName(layer_name) {
       {}
    );
 }
+
+// (배치) 레이어 이름 한번에 변경하기
+function createLayerRenameCommands(layerNamePairs) {
+   const batchCommands = [];
+   
+   for (const { layerID, newName } of layerNamePairs) {
+      batchCommands.push({
+         _obj: "set",
+         _target: [
+            {
+               _ref: "layer",
+               _id: layerID
+            }
+         ],
+         to: {
+            _obj: "layer",
+            name: newName
+         },
+         _options: {
+            dialogOptions: "dontDisplay"
+         }
+      });
+   }
+   
+   return batchCommands;
+}
+
+// (배치) 여러 레이어 이름을 한 번에 변경하기
+async function setMultipleLayerNames(layerNamePairs) {
+   const batchCommands = createLayerRenameCommands(layerNamePairs);
+   
+   // 히스토리를 하나의 단위로 묶기 위한 옵션들
+   await batchPlay(batchCommands, { 
+      synchronousExecution: true,
+      modalBehavior: "execute"
+   });
+}
+
+
+// suspendHistory/resumeHistory를 사용한 히스토리 그룹핑 (레이어 이름 변경 전용)
+async function setMultipleLayerNamesWithHistoryGrouping(layerNamePairs, context) {
+   const batchCommands = createLayerRenameCommands(layerNamePairs);
+   
+   // context가 제공되면 이미 히스토리가 일시 중단된 상태이므로 직접 batchPlay 실행
+   if (context) {
+      await batchPlay(batchCommands, {});
+      return null; // historyID는 상위에서 관리
+   } else {
+      // context가 없으면 독립적으로 히스토리 그룹핑 실행
+      const { executeWithHistoryGrouping } = require('./lib');
+      return await executeWithHistoryGrouping(batchCommands, "레이어 일괄 이름 변경", context);
+   }
+}
+
+
 
 // 이름으로 레이어 선택
 async function selectLayerByName(layer_name) {
@@ -872,7 +929,7 @@ async function mergeLayers() {
    await batchPlay(
       [
          {
-            "_obj": "mergeLayersNew",
+            "_obj": COMMAND.MERGE_LAYERS_NEW,
             "apply": true,
             "_isCommand": false
          }
@@ -971,7 +1028,11 @@ module.exports = {
    selectAllFastLayersByID, // 레이어 ID 배열을 사용한 배치 선택
    selectAllLayersByID, // 레이어 ID 배열을 사용한 배치 선택
    setLayerName,        // 레이어 이름 변경
+   setMultipleLayerNames, // 여러 레이어 이름을 한 번에 변경 (배치 처리)
+   setMultipleLayerNamesWithHistoryGrouping, // suspendHistory/resumeHistory를 사용한 히스토리 그룹핑
    setLocking,          // 레이어 잠금 설정
+   // 헬퍼 함수들
+   createLayerRenameCommands, // 레이어 이름 변경을 위한 배치 명령 생성 헬퍼 함수
    selectionForLayer,   // 투명도 기반 레이어 영역 선택
    ungroupLayers        // 그룹 해제
 };

@@ -5,6 +5,7 @@ const { createDoc} = require("./lib/lib_doc");
 const { createLay, relinkToFile, actionCommands, layTransform, deleteLayer, selectLayerByName} = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
 const { Logger } = require("./lib/logger");
+const { COMMAND, DOCUMENT } = require('./lib/constants');
 
 const logger = new Logger('ImportExport');
 
@@ -33,7 +34,7 @@ async function makeDocImportEntry(extension_value) {
         
         // 새 도큐먼트 생성
         await executeAsModal(async () => {
-            await createDoc("Imported_Assets", docSize_width, docSize_height, 72, "RGBColorMode", "transparent");
+            await createDoc("Imported_Assets", docSize_width, docSize_height, DOCUMENT.RESOLUTION, DOCUMENT.COLOR_MODE, DOCUMENT.BACKGROUND.TRANSPARENT);
             const doc = app.activeDocument;
 
             // 첫 번째 레이어 제거용
@@ -44,7 +45,7 @@ async function makeDocImportEntry(extension_value) {
                 const token = await fs.createSessionToken(file);
                 
                 await createLay();
-                await actionCommands("newPlacedLayer");
+                await actionCommands(COMMAND.NEW_PLACED_LAYER);
                 await relinkToFile(token);
                 await layTransform(100, 100);
 

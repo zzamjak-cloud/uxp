@@ -10,62 +10,48 @@
     <sp-action-button quiet size="s" id="exportExpandButton">EXPORT</sp-action-button>
     <div id="exportExpandableUI" class="expandable-ui">
 
-      <!-- 저장 1 -->
-      <div class="button-group-container">
-        <div class="button-group">
-
-          <!-- get folder -->
-          <sp-action-button class="small-button" id="getPath1">
-            <sp-icon class="icon" name="ui:FolderBreadcrumb"></sp-icon>
-          </sp-action-button>
-
-          <!-- export psd & png & link -->
-          <sp-action-button class="sp-icons-button" id="savePath1">
-            <sp-tooltip open placement="top" variant="info">Export PNG&PSD</sp-tooltip>
-            <img src="./icons/link_1_light@1X.png">
-          </sp-action-button>
-        </div>
+      <!-- 현재 선택된 폴더 표시 -->
+      <div class="current-folder-container">
+        <span id="currentFolderDisplay" class="current-folder-display">지정 폴더 없음</span>
       </div>
 
-      <!-- PSD 저장 폴더 설정 -->
+      <!-- Export 버튼들 -->
       <div class="button-group-container">
         <div class="button-group">
+          <!-- Link 버튼 -->
+          <sp-action-button class="sp-icons-button" id="exportLink">
+            <sp-tooltip open placement="top" variant="info">Export & Link</sp-tooltip>
+            <img src="./icons/link_1_light@1X.png">
+          </sp-action-button>
 
-          <!-- get folder -->
-          <sp-action-button class="small-button" id="getPath2">
-            <sp-icon class="icon" name="ui:FolderBreadcrumb"></sp-icon></sp-action-button>
-
-          <!-- export psd & png -->
-          <sp-action-button class="sp-icons-button" id="savePath2">
-            <sp-tooltip open placement="top" variant="info">Export PNG&PSD</sp-tooltip>
+          <!-- PSD 버튼 -->
+          <sp-action-button class="sp-icons-button" id="exportPSD">
+            <sp-tooltip open placement="top" variant="info">Export PSD</sp-tooltip>
             <img src="./icons/export_all_lays_import_psd_light@1X.png">
           </sp-action-button>
 
-        </div>
-      </div>
-
-      <!-- PNG 저장 폴더 설정 -->
-      <div class="button-group-container">
-        <div class="button-group">
-
-          <!-- get folder -->
-          <sp-action-button class="small-button" id="getPath3">
-            <sp-icon class="icon" name="ui:FolderBreadcrumb"></sp-icon></sp-action-button>
-
-          <!-- export psd & png -->
-          <sp-action-button class="sp-icons-button" id="savePath3">
-            <sp-tooltip open placement="top" variant="info">Export PNG&PSD</sp-tooltip>
+          <!-- PNG 버튼 -->
+          <sp-action-button class="sp-icons-button" id="exportPNG">
+            <sp-tooltip open placement="top" variant="info">Export PNG</sp-tooltip>
             <img src="./icons/export_all_lays_import_png_light@1X.png">
           </sp-action-button>
 
+          <!-- + 버튼 -->
+          <sp-action-button class="sp-icons-button" id="addFolderPreset">
+            <sp-tooltip open placement="top" variant="info">Add Folder Preset</sp-tooltip>
+            <span style="font-size: 16px; font-weight: bold;">+</span>
+          </sp-action-button>
         </div>
       </div>
 
-      <sp-divider size="small" class="divider-spacing"></sp-divider>
-
-      <!-- 문서 크기 유지 옵션 체크박스 -->
+      <!-- Keep Doc Size 체크박스 -->
       <div class="checkbox-container">
         <sp-checkbox id="maintainDocSize">Keep Doc Size</sp-checkbox>
+      </div>
+
+      <!-- 폴더 프리셋 컨테이너 -->
+      <div id="folderPresetContainer" class="folder-preset-container">
+        <!-- 폴더 프리셋들이 동적으로 추가될 영역 -->
       </div>
 
       <sp-divider size="small" class="divider-spacing"></sp-divider>
@@ -314,17 +300,6 @@
               <img src="./icons/appicon_light_dot@1X.png">
             </sp-action-button>
 
-          </div>
-        </div>
-
-        <div class="button-group-container">
-          <div class="button-group">
-            <!-- Animation Match Layers -->
-            <sp-action-button class="sp-icons-button" id="animationMatchLayers">
-              <sp-tooltip open placement="top" variant="info">Animation Match Layers</sp-tooltip>
-              <img src="./icons/animation_match_layers@1X.png">
-            </sp-action-button>
-
             <!-- Clean PSD -->
             <sp-action-button class="sp-icons-button" id="cleanPSD">
               <sp-tooltip open placement="top" variant="info">Clean PSD</sp-tooltip>
@@ -336,8 +311,22 @@
               <sp-tooltip open placement="top" variant="info">Split to Layers</sp-tooltip>
               <img src="./icons/split_to_layers_light@1X.png">
             </sp-action-button>
+
           </div>
         </div>
+
+        <!-- 
+        <div class="button-group-container">
+          <div class="button-group">
+
+            Animation Match Layers 
+            <sp-action-button class="sp-icons-button" id="animationMatchLayers">
+              <sp-tooltip open placement="top" variant="info">Animation Match Layers</sp-tooltip>
+              <img src="./icons/animation_match_layers@1X.png">
+            </sp-action-button> 
+            
+          </div>
+        </div> -->
       </div>
   </section>
 
@@ -365,7 +354,7 @@
 
       <!-- Num 생성 옵션 체크박스 -->
       <div class="checkbox-container">
-        <sp-checkbox id="generateNumbers" checked>Generate Numbers</sp-checkbox>
+        <sp-checkbox id="generateNumbers" checked>Add Nums</sp-checkbox>
       </div>
 
       <sp-divider size="small" class="divider-spacing"></sp-divider>

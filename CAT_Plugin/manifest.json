@@ -17,7 +17,7 @@
   "entrypoints": [
     {
       "type": "panel",
-      "id": "vanilla",
+      "id": "cat-panel",
       "minimumSize": {
         "width": 240,
         "height": 200

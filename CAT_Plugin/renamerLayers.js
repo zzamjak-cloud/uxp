@@ -1,6 +1,12 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
-const { setLayerName, selectByLayerID, addSelectLayerIndividual } = require("./lib/lib_layer");
+const { batchPlay } = require("photoshop").action;
+const { 
+    selectByLayerID, 
+    addSelectLayerIndividual, 
+    createLayerRenameCommands 
+    } = require("./lib/lib_layer");
+const { executeModalWithHistoryGrouping } = require("./lib/lib");
 const { handleError } = require("./lib/errorHandler");
 const { Logger } = require("./lib/logger");
 const { showAlert } = require("./lib/lib");
@@ -277,16 +283,6 @@ function generateNewName(layer, type, text, replaceText = '', index = 0, totalLa
     }
 }
 
-// 단일 레이어 이름 변경
-async function renameLayer(layer, newName) {
-    try {
-        await selectByLayerID(layer.id);
-        await setLayerName(newName);
-        logger.info(`Renamed layer: ${layer.name} → ${newName}`);
-    } catch (error) {
-        throw new Error(`Failed to rename layer ${layer.name}: ${error.message}`);
-    }
-}
 
 // 원래 선택 상태 복원
 async function restoreOriginalSelection(originalLayerIDs) {
@@ -338,25 +334,35 @@ async function renamerLayers(type) {
         let processedCount = 0;
         const totalLayers = actLays.length;
 
-        await executeAsModal(async () => {
-            logger.info(`Starting rename operation: ${type}`);
-            logger.info(`Processing ${totalLayers} layers`);
+        // 새로운 범용 히스토리 그룹핑 함수 사용
+        await executeModalWithHistoryGrouping(
+            async (context) => {
+                logger.info(`Starting rename operation: ${type}`);
+                logger.info(`Processing ${totalLayers} layers`);
 
-            // 정순 또는 역순 처리
-            //const layers = type === RENAME_TYPES.REVERSE_NUMBER ? [...actLays].reverse() : actLays;
+                // 모든 레이어의 새 이름을 미리 계산
+                const layerNamePairs = [];
+                for (const [index, layer] of actLays.entries()) {
+                    const newName = generateNewName(layer, type, text, replaceText, index, totalLayers);
+                    layerNamePairs.push({
+                        layerID: layer.id,
+                        newName: newName
+                    });
+                    logger.info(`Prepared rename: ${layer.name} → ${newName}`);
+                }
 
-            for (const [index, layer] of actLays.entries()) {
-                const newName = generateNewName(layer, type, text, replaceText, index, totalLayers);
-                await renameLayer(layer, newName);
-                processedCount++;
-                logger.info(`Progress: ${processedCount}/${totalLayers}`);
-            }
-
-            logger.info('Rename operation completed successfully');
-            
-            // 원래 선택 상태 복원
-            await restoreOriginalSelection(originalLayerIDs);
-        }, { commandName: "Rename Layers" });
+                // 히스토리 그룹핑과 함께 레이어 이름 변경
+                const batchCommands = createLayerRenameCommands(layerNamePairs);
+                await batchPlay(batchCommands, {});
+                processedCount = totalLayers;
+                logger.info('Rename operation completed successfully');
+                
+                // 원래 선택 상태 복원
+                await restoreOriginalSelection(originalLayerIDs);
+            },
+            "레이어 일괄 이름 변경",  // 히스토리 이름
+            "Rename Layers"  // 명령 이름
+        );
 
     } catch (error) {
         await handleError(error, 'layer_renamer');

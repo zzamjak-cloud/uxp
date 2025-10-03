@@ -3,9 +3,9 @@ const app = require("photoshop").app;
 const fs = require('uxp').storage.localFileSystem;
 
 // 사용자 정의 모듈
-const { showAlert, getDataFolder } = require("./lib/lib");
+const { showAlert } = require("./lib/lib");
 const { speedSave } = require("./exportSpeedSave");
-const { exportSelectedFile } = require("./exportSelectedLayers");
+const { exportSelectedFile, setupFolderPresetEventListeners } = require("./exportSelectedLayers");
 const { savePngAndLinkToPSD } = require("./exportSelectedAndLink");
 const { appIconMaker, appIconPSDGenerate } = require("./appIconMaker");
 const { patchMaker } = require("./patchMaker");
@@ -20,44 +20,13 @@ const { clearHiddenEffects } = require("./clearHiddenEffects");
 const { splitToLayers } = require("./splitToLayers");
 const { clearEmptyLayers } = require("./clearEmptyLayers");
 
-// 경로 설정 객체
-const pathConfig = {
-    count: 3,
-    prefix: 'getPath',
-    handlers: {
-        get: getDataFolder,
-        save: savePngAndLinkToPSD,
-        init: existSavePath
-    }
-};
+// Export - 새로운 동적 폴더 시스템 사용
+// 기존 경로 설정 시스템은 제거됨
 
-// Export
-// 경로 ID 생성 및 처리
-Array.from({length: pathConfig.count}, (_, i) => i + 1).forEach(num => {
-
-    const pathId = `${pathConfig.prefix}${num}`;
-    
-    // getPath 버튼들 (변경 없음)
-    document.getElementById(pathId)
-        .addEventListener("click", () => pathConfig.handlers.get(pathId));
-    
-    // savePath 버튼들 - 조건부 처리 추가
-    if (num === 2) {
-        // savePath2는 새로운 exportSelectedToPSD 함수 사용
-        document.getElementById(`savePath${num}`)
-            .addEventListener("click", () => exportSelectedFile(pathId, 'psd'));
-    } else if(num === 3){
-        document.getElementById(`savePath${num}`)
-            .addEventListener("click", () => exportSelectedFile(pathId, 'png'));
-    } else {
-        // savePath1 기존 함수 사용
-        document.getElementById(`savePath${num}`)
-            .addEventListener("click", () => pathConfig.handlers.save(pathId));
-    }
-    
-    // 초기화 (변경 없음)
-    document.addEventListener("DOMContentLoaded", () => pathConfig.handlers.init(pathId));
-});
+// 새로운 Export 버튼들 (동적 폴더 선택 사용)
+document.getElementById("exportLink").addEventListener("click", () => { savePngAndLinkToPSD('dynamic') });
+document.getElementById("exportPSD").addEventListener("click", () => { exportSelectedFile('dynamic', 'psd') });
+document.getElementById("exportPNG").addEventListener("click", () => { exportSelectedFile('dynamic', 'png') });
 
 document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
 document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
@@ -85,7 +54,7 @@ document.getElementById("appiconPSDgenerate").addEventListener("click", appIconP
 document.getElementById("appiconmaker").addEventListener("click", () => appIconMaker("bicubicSharper"));
 document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
 document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
-document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
+// document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
 document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
 document.getElementById("splitToLayers").addEventListener("click", splitToLayers);
 //Guide
@@ -102,44 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // 프리셋 이벤트 리스너 설정
     setupPresetEventListeners();
+    
+    // 폴더 프리셋 이벤트 리스너 설정
+    setupFolderPresetEventListeners();
 });
 
-// 플러그인 로드시 getPath 버튼 정보 표기, 만약 기존에 연결해둔 것이 있다면, 그대로 표기
-async function existSavePath(id) {
-    // console.log('getPath!!')
-    // 데이터 폴더의 엔트리들 얻은 후 모든 파일 리스트 추출
-    const dataFolder = await fs.getDataFolder();
-    const entries = await dataFolder.getEntries();
-    // console.log(entries);
-
-    try {
-        // let txt_file = null;
-        const saveFolder = document.getElementById(id);
-        let flag = false;
-        let folder_name = ""
-
-        for (const entry of entries) {
-            if (entry.name === `${id}.txt`) {
-                flag = true;
-                const folder_URL = await entry.read();
-                const folder_name_array = folder_URL.split("\\");
-                if (folder_name_array.length > 2) {
-                    folder_name = folder_name_array[folder_name_array.length - 1];
-                } else if (folder_name_array.length < 2) {
-                    const folder_name_array_1 = folder_URL.split("/");
-                    folder_name = folder_name_array_1[folder_name_array_1.length - 1];
-                }
-                break;
-            }
-        }
-
-        if (flag) {
-            saveFolder.innerText = folder_name;
-        } 
-    } catch(e) {
-        console.log(e.message);
-    }
-}
+// 기존 existSavePath 함수는 제거됨 (새로운 동적 폴더 시스템 사용)
 
 function expandUI(ui_id, button_id, category_name) {
     const expandableUI = document.getElementById(ui_id);

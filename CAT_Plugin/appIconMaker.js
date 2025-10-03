@@ -2,7 +2,7 @@ const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
 const { createFolderToken, showAlert } = require("./lib/lib");
-const { createDoc, layerVisible, docDuplicate, docResizeCanvas, docResizeImage, docCloseWithoutSaving } = require("./lib/lib_doc");
+const { createDoc, layerVisible, docDuplicate, docResizeCanvas, docResizeOptions, docCloseWithoutSaving } = require("./lib/lib_doc");
 const { saveForWebPNG } = require("./lib/lib_export");
 const { createLay, setLayerName, layOpacity, makeGroup, moveLayer, setLocking } = require("./lib/lib_layer");
 const { setForegroundColor, fillColor, makeShape, setPathFinderType } = require("./lib/lib_tool");
@@ -76,7 +76,7 @@ async function generateIcon(size, folderPath, folderToken, platformName, sampleM
             await docDuplicate(doc, fileName);
             const curDoc = app.activeDocument;
             await docResizeCanvas(curDoc, 1332);
-            await docResizeImage(curDoc, size, sampleMethodName);
+            await docResizeOptions(curDoc, size, size, 'pixelsUnit', sampleMethodName);
             await saveForWebPNG(fileName, folderToken, fileToken);
             await docCloseWithoutSaving(curDoc);
         });
@@ -108,7 +108,7 @@ async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_nam
                 );
             }
 
-            await docResizeImage(curDoc, size, sampleMethodName);
+            await docResizeOptions(curDoc, size, size, 'pixelsUnit', sampleMethodName);
             await saveForWebPNG(fileName, folderToken, fileToken);
             await docCloseWithoutSaving(curDoc);
         });

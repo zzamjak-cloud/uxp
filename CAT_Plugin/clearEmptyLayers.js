@@ -3,6 +3,7 @@ const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { showAlert } = require("./lib/lib");
 const { deleteLayerByID } = require("./lib/lib_layer");
+const { executeModalWithHistoryGrouping } = require("./lib/lib");
 
 // 빈 레이어 삭제
 async function clearEmptyLayers() {
@@ -15,12 +16,14 @@ async function clearEmptyLayers() {
 
         const doc = app.activeDocument;
         
-        // 히스토리 상태로 묶기
-        await executeAsModal(async () => {
-            await performClearEmptyLayers(doc);
-        }, {
-            commandName: "빈 레이어 삭제"
-        });
+        // 히스토리 그룹핑으로 묶기
+        await executeModalWithHistoryGrouping(
+            async (context) => {
+                await performClearEmptyLayers(doc);
+            },
+            "빈 레이어 삭제",  // 히스토리 이름
+            "Clear Empty Layers"  // 명령 이름
+        );
 
     } catch (error) {
         await showAlert(`레이어 삭제 실패: ${error.message}`);
@@ -38,8 +41,9 @@ async function performClearEmptyLayers(doc) {
 
     let removedLayersCount = 0;
     let removedGroupsCount = 0;
+    const layersToDelete = []; // 삭제할 레이어 ID 배열
 
-    // 모든 레이어를 역순으로 순회 (삭제 시 인덱스 변화 방지)
+    // 1단계: 삭제할 레이어들을 수집
     for (let i = layers.length - 1; i >= 0; i--) {
         const layer = layers[i];
         
@@ -53,7 +57,7 @@ async function performClearEmptyLayers(doc) {
             if (layer.kind === 'pixel') {
                 const isEmpty = isLayerEmpty(layer);
                 if (isEmpty && !layer.locked && !layer.isBackgroundLayer) {
-                    await deleteLayerByID(layer.id);
+                    layersToDelete.push(layer.id);
                     removedLayersCount++;
                 }
             }
@@ -61,7 +65,7 @@ async function performClearEmptyLayers(doc) {
             else if (layer.kind === 'group') {
                 const isEmpty = await processGroupRecursively(layer);
                 if (isEmpty && !layer.locked) {
-                    await deleteLayerByID(layer.id);
+                    layersToDelete.push(layer.id);
                     removedGroupsCount++;
                 }
             }
@@ -70,6 +74,30 @@ async function performClearEmptyLayers(doc) {
             }
         } catch (error) {
             console.log(`레이어 ${layer.name} 처리 실패:`, error.message);
+        }
+    }
+
+    // 2단계: 수집된 레이어들을 배치로 삭제
+    if (layersToDelete.length > 0) {
+        try {
+            const batchCommands = layersToDelete.map(layerID => ({
+                _obj: "delete",
+                _target: [{ _ref: "layer", _id: layerID }],
+                _options: { dialogOptions: "dontDisplay" }
+            }));
+            
+            await batchPlay(batchCommands, {});
+            console.log(`배치로 ${layersToDelete.length}개의 레이어를 삭제했습니다.`);
+        } catch (error) {
+            console.log("배치 삭제 실패, 개별 삭제로 시도:", error.message);
+            // 배치 삭제가 실패하면 개별 삭제로 시도
+            for (const layerID of layersToDelete) {
+                try {
+                    await deleteLayerByID(layerID);
+                } catch (deleteError) {
+                    console.log(`레이어 ${layerID} 삭제 실패:`, deleteError.message);
+                }
+            }
         }
     }
 
@@ -111,6 +139,7 @@ async function processGroupRecursively(group) {
         }
 
         let hasValidContent = false;
+        const layersToDelete = []; // 삭제할 레이어 ID 배열
 
         // 그룹 내부의 모든 레이어를 역순으로 순회 (삭제 시 인덱스 변화 방지)
         for (let i = group.layers.length - 1; i >= 0; i--) {
@@ -125,7 +154,7 @@ async function processGroupRecursively(group) {
             // 일반 레이어인 경우 (pixel 타입)
             if (layer.kind === 'pixel') {
                 if (isLayerEmpty(layer) && !layer.locked && !layer.isBackgroundLayer) {
-                    await deleteLayerByID(layer.id);
+                    layersToDelete.push(layer.id);
                 } else {
                     hasValidContent = true; // bounds를 가진 레이어가 있음
                 }
@@ -136,8 +165,31 @@ async function processGroupRecursively(group) {
                 if (!isEmpty) {
                     hasValidContent = true; // 유효한 하위 그룹이 있음
                 } else {
-                    // 하위 그룹이 비어있으면 삭제
-                    await deleteLayerByID(layer.id);
+                    // 하위 그룹이 비어있으면 삭제 목록에 추가
+                    layersToDelete.push(layer.id);
+                }
+            }
+        }
+
+        // 수집된 레이어들을 배치로 삭제
+        if (layersToDelete.length > 0) {
+            try {
+                const batchCommands = layersToDelete.map(layerID => ({
+                    _obj: "delete",
+                    _target: [{ _ref: "layer", _id: layerID }],
+                    _options: { dialogOptions: "dontDisplay" }
+                }));
+                
+                await batchPlay(batchCommands, {});
+            } catch (error) {
+                console.log("그룹 내 배치 삭제 실패, 개별 삭제로 시도:", error.message);
+                // 배치 삭제가 실패하면 개별 삭제로 시도
+                for (const layerID of layersToDelete) {
+                    try {
+                        await deleteLayerByID(layerID);
+                    } catch (deleteError) {
+                        console.log(`그룹 내 레이어 ${layerID} 삭제 실패:`, deleteError.message);
+                    }
                 }
             }
         }

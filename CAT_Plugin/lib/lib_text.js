@@ -1,4 +1,5 @@
 const { batchPlay } = require("photoshop").action;
+const { TEXT_ALIGNMENT, TEXT_ORIENTATION } = require('./constants');
 
 /**
  * 텍스트 레이어 생성
@@ -35,7 +36,7 @@ async function createTextLayer(text, x = 0, y = 0, fontName = "Arial-BoldMT", fo
                     warpPerspectiveOther: 0,
                     warpRotate: {
                         _enum: "orientation",
-                        _value: "horizontal"
+                        _value: TEXT_ORIENTATION.HORIZONTAL
                     }
                 },
                 textShape: [
@@ -47,7 +48,7 @@ async function createTextLayer(text, x = 0, y = 0, fontName = "Arial-BoldMT", fo
                         },
                         orientation: {
                             _enum: "orientation",
-                            _value: "horizontal"
+                            _value: TEXT_ORIENTATION.HORIZONTAL
                         },
                         transform: {
                             _obj: "transform",
@@ -231,10 +232,7 @@ async function createSimpleTextLayer(text, x = 100, y = 100) {
     await createTextLayer(text, x, y, "Arial-BoldMT", 24, 0, 0, 0, "left");
 }
 
-/**
- * 선택한 텍스트 레이어의 내용 변경
- * @param {string} newText - 새로운 텍스트 내용
- */
+// 선택한 텍스트 레이어의 내용 변경
 async function setTextContent(newText) {
     await batchPlay([
         {
@@ -257,10 +255,7 @@ async function setTextContent(newText) {
     ], {});
 }
 
-/**
- * 선택한 텍스트 레이어의 폰트 크기 변경
- * @param {number} fontSize - 폰트 크기 (포인트)
- */
+// 선택한 텍스트 레이어의 폰트 크기 변경
 async function setTextSize(fontSize) {
     await batchPlay([
         {
@@ -296,12 +291,7 @@ async function setTextSize(fontSize) {
     ], {});
 }
 
-/**
- * 선택한 텍스트 레이어의 색상 변경
- * @param {number} r - 빨간색 (0-255)
- * @param {number} g - 초록색 (0-255)
- * @param {number} b - 파란색 (0-255)
- */
+// 선택한 텍스트 레이어의 색상 변경
 async function setTextColor(r, g, b) {
     await batchPlay([
         {
@@ -339,10 +329,7 @@ async function setTextColor(r, g, b) {
     ], {});
 }
 
-/**
- * 선택한 텍스트 레이어의 폰트 변경
- * @param {string} fontName - 폰트명 (예: "Arial-BoldMT", "맑은 고딕")
- */
+// 선택한 텍스트 레이어의 폰트 변경
 async function setTextFont(fontName) {
     await batchPlay([
         {
@@ -376,10 +363,7 @@ async function setTextFont(fontName) {
     ], {});
 }
 
-/**
- * 선택한 텍스트 레이어의 정렬 방식 변경
- * @param {string} alignment - 정렬 방식 ("left", "center", "right")
- */
+// 선택한 텍스트 레이어의 정렬 방식 변경
 async function setTextAlignment(alignment) {
     await batchPlay([
         {
@@ -415,11 +399,7 @@ async function setTextAlignment(alignment) {
     ], {});
 }
 
-/**
- * 텍스트 레이어 위치 이동
- * @param {number} x - 새로운 X 좌표
- * @param {number} y - 새로운 Y 좌표
- */
+// 텍스트 레이어 위치 이동
 async function setTextPosition(x, y) {
     await batchPlay([
         {
@@ -455,13 +435,7 @@ async function setTextPosition(x, y) {
     ], {});
 }
 
-/**
- * 한국어 텍스트 레이어 생성 (한국어 폰트 기본값)
- * @param {string} text - 텍스트 내용
- * @param {number} x - X 좌표
- * @param {number} y - Y 좌표
- * @param {number} fontSize - 폰트 크기
- */
+// 한국어 텍스트 레이어 생성 (한국어 폰트 기본값)
 async function createKoreanTextLayer(text, x = 100, y = 100, fontSize = 24) {
     await createTextLayer(text, x, y, "맑은 고딕", fontSize, 0, 0, 0, "left");
 }
