@@ -13,6 +13,23 @@ async function createDoc(name, width, height, resolution, mode, fill) {
     })
 }
 
+// 컬러 모드 변환
+async function convertColorMode(targetMode = DOCUMENT.COLOR_MODE.INDEXED_COLOR, options = {}) {
+    const defaultOptions = {
+        colors: 256,
+        forced: { _enum: "forcedColors", _value: "none" },
+        dither: { _enum: "dither", _value: "none" }
+    };
+    
+    const finalOptions = { ...defaultOptions, ...options };
+    
+    await batchPlay([{
+        _obj: "convertMode",
+        to: { _class: targetMode },
+        ...finalOptions
+    }], {});
+}
+
 // 이전 문서 선택
 async function selectPrevDoc() {
     const result = await batchPlay(
@@ -43,7 +60,6 @@ async function docDuplicate(doc, docName) {
 async function docResizeCanvas(doc, size) {
     await doc.resizeCanvas(size, size);
 }
-
 
 // Image 크기 조정 (옵션 설정)
 async function docResizeOptions(doc, width, height, unitValue = 'pixelsUnit', interpolationValue = 'nearestNeighbor') {
@@ -117,6 +133,7 @@ async function layerVisible(show_hide, name) {
 
 module.exports = {
     createDoc,                // 문서 생성
+    convertColorMode,         // 컬러 모드 변환
     selectPrevDoc,            // 이전 문서 선택
     docDuplicate,             // 문서 복사
     docResizeCanvas,          // 문서 크기 조정

@@ -31,6 +31,12 @@ module.exports = {
                 WIDTH: 1920,
                 HEIGHT: 1080
             }
+        },
+        COLOR_MODE: {
+            INDEXED_COLOR: 'indexedColorMode',
+            RGB_COLOR: 'RGBColorMode',
+            CMYK_COLOR: 'CMYKColorMode',
+            GRAYSCALE_COLOR: 'grayscaleColorMode',
         }
     },
 
@@ -73,6 +79,88 @@ module.exports = {
             LINEAR_DODGE: 'linearDodge',
             VIVID_LIGHT: 'vividLight',
             LINEAR_LIGHT: 'linearLight',
+        }
+    },
+    LAYER_STYLE: {
+        BEVEL_EMBOSS: 'bevelEmboss',
+        STROKE: 'frameFX',
+        INNER_SHADOW: 'innerShadow',
+        INNER_GLOW: 'innerGlow',
+        SATIN: 'satin',
+        COLOR_OVERLAY: 'colorOverlay',
+        GRADIENT_OVERLAY: 'gradientFill',
+        PATTERN_OVERLAY: 'patternFill',
+        OUTER_GLOW: 'outerGlow',
+        DROP_SHADOW: 'dropShadow',
+    },
+
+    // Layer Style 상세 설정
+    LAYER_STYLE_CONFIG: {
+        // Stroke 설정
+        STROKE: {
+            STYLE: {
+                OUTSET: 'outsetFrame',
+                INSET: 'insetFrame',
+                CENTER: 'centerFrame'
+            },
+            FILL_TYPE: {
+                SOLID_COLOR: 'solidColor',
+                GRADIENT: 'gradient',
+                PATTERN: 'pattern'
+            },
+            POSITION: {
+                OUTSIDE: 'outside',
+                INSIDE: 'inside',
+                CENTER: 'center'
+            }
+        },
+        // Drop Shadow 설정
+        DROP_SHADOW: {
+            BLEND_MODE: {
+                NORMAL: 'normal',
+                MULTIPLY: 'multiply',
+                SCREEN: 'screen',
+                OVERLAY: 'overlay',
+                SOFT_LIGHT: 'softLight',
+                HARD_LIGHT: 'hardLight'
+            }
+        },
+        // Inner Shadow 설정
+        INNER_SHADOW: {
+            BLEND_MODE: {
+                NORMAL: 'normal',
+                MULTIPLY: 'multiply',
+                SCREEN: 'screen',
+                OVERLAY: 'overlay',
+                SOFT_LIGHT: 'softLight',
+                HARD_LIGHT: 'hardLight'
+            }
+        },
+        // Glow 설정
+        GLOW: {
+            TECHNIQUE: {
+                SOFTER: 'softer',
+                PRECISE: 'precise'
+            },
+            SOURCE: {
+                EDGE: 'edge',
+                CENTER: 'center'
+            }
+        },
+        // Bevel & Emboss 설정
+        BEVEL_EMBOSS: {
+            STYLE: {
+                OUTER_BEVEL: 'outerBevel',
+                INNER_BEVEL: 'innerBevel',
+                EMBOSS: 'emboss',
+                PILLOW_EMBOSS: 'pillowEmboss',
+                STROKE_EMBOSS: 'strokeEmboss'
+            },
+            TECHNIQUE: {
+                SMOOTH: 'smooth',
+                CHISEL_HARD: 'chiselHard',
+                CHISEL_SOFT: 'chiselSoft'
+            }
         }
     },
 
@@ -130,6 +218,14 @@ module.exports = {
     TEXT_ORIENTATION: {
         HORIZONTAL: 'horizontal',
         VERTICAL: 'vertical'
+    },
+
+    TOOL: {
+        RECTANGLE: 'rectangleTool',
+        ELLIPSE: 'ellipseTool',
+        TRIANGLE: 'triangleTool',
+        POLYGON: 'polygonTool',
+        FREEFORM: 'freeformTool',
     },
 
     // Common error messages

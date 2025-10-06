@@ -71,30 +71,6 @@
             <img src="./icons/sort_pick_light@1X.png">
           </sp-action-button>
 
-          <!-- Export JPG -->
-          <sp-action-button class="sp-icons-button" id="saveforwebjpg">
-            <sp-tooltip open placement="top" variant="info">SaveForWeb JPG</sp-tooltip>
-            <img src="./icons/export_jpg_light@1X.png">
-          </sp-action-button>
-
-          <!-- Export PNG -->
-          <sp-action-button class="sp-icons-button" id="saveforwebpng">
-            <sp-tooltip open placement="top" variant="info">SaveForWeb PNG</sp-tooltip>
-            <img src="./icons/export_png_light@1X.png">
-          </sp-action-button>
-          
-        </div>
-      </div>
-
-      <div class="button-group-container">
-        <div class="button-group">
-
-          <!-- Export Market Screenshot
-          <sp-action-button class="sp-icons-button" id="exportMarketScreenshot">
-            <sp-tooltip open placement="top" variant="info">Export Market Screenshots</sp-tooltip>
-            <img src="./icons/export_market_screenshop@1X.png">
-          </sp-action-button> -->
-
           <!-- Clear Empty Layers -->
           <sp-action-button class="sp-icons-button" id="clearEmptyLayers">
             <sp-tooltip open placement="top" variant="info">ClearEmptyLayers </sp-tooltip>
@@ -115,6 +91,38 @@
           
         </div>
       </div>
+
+      <div class="button-group-container">
+        <div class="button-group">
+
+          <!-- Export GIF -->
+          <sp-action-button class="sp-icons-button" id="saveforwebgif">
+            <sp-tooltip open placement="top" variant="info">SaveForWeb GIF</sp-tooltip>
+            <img src="./icons/export_gif_light@1X.png">
+          </sp-action-button>
+
+          <!-- Export JPG -->
+          <sp-action-button class="sp-icons-button" id="saveforwebjpg">
+            <sp-tooltip open placement="top" variant="info">SaveForWeb JPG</sp-tooltip>
+            <img src="./icons/export_jpg_light@1X.png">
+          </sp-action-button>
+
+          <!-- Export PNG -->
+          <sp-action-button class="sp-icons-button" id="saveforwebpng">
+            <sp-tooltip open placement="top" variant="info">SaveForWeb PNG</sp-tooltip>
+            <img src="./icons/export_png_light@1X.png">
+          </sp-action-button>
+
+          <!-- Export Market Screenshot
+          <sp-action-button class="sp-icons-button" id="exportMarketScreenshot">
+            <sp-tooltip open placement="top" variant="info">Export Market Screenshots</sp-tooltip>
+            <img src="./icons/export_market_screenshop@1X.png">
+          </sp-action-button> -->
+
+          
+          
+        </div>
+      </div>
       
     </div>
    
@@ -129,13 +137,13 @@
       <div class="input-container">
         <div class="input-fields">
             <div class="input-group">
-                <sp-label for="docWidth">Doc Width</sp-label>
-                <sp-textfield id="docWidth" placeholder="128"></sp-textfield>
+                <sp-label for="docWidth">width</sp-label>
+                <sp-textfield id="docWidth" placeholder="1280"></sp-textfield>
             </div>
             
             <div class="input-group">
-                <sp-label for="docHeight">Doc Height</sp-label>
-                <sp-textfield id="docHeight" placeholder="128"></sp-textfield>
+                <sp-label for="docHeight">height</sp-label>
+                <sp-textfield id="docHeight" placeholder="1280"></sp-textfield>
             </div>
         </div>
       </div>
@@ -165,12 +173,12 @@
         <div class="input-fields">
             <div class="input-group">
                 <sp-label for="gridWidth">Width</sp-label>
-                <sp-textfield id="gridWidth" placeholder="100"></sp-textfield>
+                <sp-textfield id="gridWidth" placeholder="128"></sp-textfield>
             </div>
             
             <div class="input-group">
                 <sp-label for="gridHeight">Height</sp-label>
-                <sp-textfield id="gridHeight" placeholder="100"></sp-textfield>
+                <sp-textfield id="gridHeight" placeholder="128"></sp-textfield>
             </div>
 
             <div class="input-group">
@@ -315,6 +323,15 @@
           </div>
         </div>
 
+        <div class="button-group-container">
+          <div class="button-group">
+
+            <!-- Test -->
+            <sp-action-button class="sp-icons-button" id="test">Test</sp-action-button>
+
+          </div>
+        </div>
+
         <!-- 
         <div class="button-group-container">
           <div class="button-group">
@@ -368,9 +385,6 @@
 
     </div>
   </section>
-
-
-  <!-- 테스트 버튼 -->
   
   <script src="main.js"></script> 
 </body>

@@ -14,12 +14,12 @@ const { renamerLayers, setupPresetEventListeners } = require("./renamerLayers");
 const { makeDocImportEntry} = require("./importFiles");
 const { addAllGuides, clearGuides } = require("./addGuide");
 const { applyGridLayout } = require("./applyGridLayout");
-const { animationMatchLayers } = require("./animationMatchLayers");
+// const { animationMatchLayers } = require("./animationMatchLayers");
 const { cleanPSD } = require("./cleanPSD");
 const { clearHiddenEffects } = require("./clearHiddenEffects");
 const { splitToLayers } = require("./splitToLayers");
 const { clearEmptyLayers } = require("./clearEmptyLayers");
-
+const { test } = require("./test");
 // Export - 새로운 동적 폴더 시스템 사용
 // 기존 경로 설정 시스템은 제거됨
 
@@ -27,14 +27,14 @@ const { clearEmptyLayers } = require("./clearEmptyLayers");
 document.getElementById("exportLink").addEventListener("click", () => { savePngAndLinkToPSD('dynamic') });
 document.getElementById("exportPSD").addEventListener("click", () => { exportSelectedFile('dynamic', 'psd') });
 document.getElementById("exportPNG").addEventListener("click", () => { exportSelectedFile('dynamic', 'png') });
-
-document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
-document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
 document.getElementById("patch").addEventListener("click", patchMaker);
 document.getElementById("sortlayer").addEventListener("click", sortingLayer);
 document.getElementById("picksort").addEventListener("click", pickSortingLayer);
 document.getElementById("clearHiddenFX").addEventListener("click", () => {clearHiddenEffects()});
 document.getElementById("clearEmptyLayers").addEventListener("click", () => {clearEmptyLayers()});
+document.getElementById("saveforwebgif").addEventListener("click", () => { speedSave('gif') });
+document.getElementById("saveforwebpng").addEventListener("click", () => { speedSave('png') });
+document.getElementById("saveforwebjpg").addEventListener("click", () => { speedSave('jpg') });
 
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
@@ -57,6 +57,7 @@ document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 // document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
 document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
 document.getElementById("splitToLayers").addEventListener("click", splitToLayers);
+document.getElementById("test").addEventListener("click", test);
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
 document.getElementById("clearGuide").addEventListener("click", () => { clearGuides() });

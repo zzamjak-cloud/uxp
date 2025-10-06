@@ -24,6 +24,18 @@ CAT Panel은 Adobe Photoshop용 UXP 플러그인으로, 디자이너의 작업 �
 - **Remove**: 특정 텍스트 제거
 - **프리셋 시스템**: 자주 사용하는 이름 변경 규칙 저장
 
+### 🎨 Layer Effects (레이어 효과)
+- **Stroke**: 테두리 효과 (외부/내부/중앙)
+- **Drop Shadow**: 그림자 효과
+- **Inner Shadow**: 내부 그림자 효과
+- **Outer Glow**: 외부 글로우 효과
+- **Inner Glow**: 내부 글로우 효과
+- **Bevel & Emboss**: 입체 효과
+- **Color Overlay**: 색상 오버레이
+- **Gradient Overlay**: 그라디언트 오버레이
+- **범용 적용**: 여러 효과를 한 번에 적용 가능
+- **복사/붙여넣기**: 레이어 스타일 복사 및 붙여넣기
+
 ### 🛠️ ETC (기타 도구)
 - **App Icon Maker**: 앱 아이콘 생성 (일반/도트)
 - **Animation Match Layers**: 애니메이션 레이어 매칭
@@ -69,6 +81,8 @@ CAT_Plugin/
 │   ├── lib.js          # 공통 함수
 │   ├── lib_layer.js    # 레이어 관련 함수
 │   ├── lib_export.js   # 내보내기 관련 함수
+│   ├── lib_effects.js  # 레이어 효과 관련 함수
+│   ├── constants.js    # 상수 정의
 │   └── ...
 ├── icons/              # 아이콘 리소스
 └── [기능별 JS 파일들]   # 각 기능별 구현 파일

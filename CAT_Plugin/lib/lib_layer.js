@@ -754,124 +754,7 @@ async function selectAllLayersByID(layers, layerIDs) {
   }
 }
 
-// WorkPath 생성
-// value : 0 ~ 100
-async function makeWorkPath(value) {
-   const result = await batchPlay(
-      [
-         {
-            _obj: "make",
-            _target: [
-               {
-                  _ref: "path"
-               }
-            ],
-            from: {
-               _ref: "selectionClass",
-               _property: "selection"
-            },
-            tolerance: {
-               _unit: "pixelsUnit",
-               _value: value
-            },
-            _options: {
-               dialogOptions: "dontDisplay"
-            }
-         }
-      ],
-      {}
-   );
-   return result;
-}
 
-// Shape 생성
-async function makeShape(layerID) {
-   const result = await batchPlay(
-      [
-         {
-            _obj: "make",
-            _target: [
-               {
-                  _ref: "contentLayer"
-               }
-            ],
-            using: {
-               _obj: "contentLayer",
-               type: {
-                  _obj: "solidColorLayer",
-                  color: {
-                     _obj: "RGBColor",
-                     red: 0.0,
-                     grain: 0.0,
-                     blue: 0.0
-                  }
-               },
-               shape: {
-                  _obj: "pathClass",
-                  targetPath: {
-                     _enum: "pathKind",
-                     _value: "targetPath"
-                  }
-               },
-               strokeStyle: {
-                  _obj: "strokeStyle",
-                  strokeStyleVersion: 2,
-                  strokeEnabled: false,
-                  fillEnabled: true,
-                  strokeStyleLineWidth: {
-                     _unit: "pixelsUnit",
-                     _value: 1
-                  },
-                  strokeStyleLineDashOffset: {
-                     _unit: "pointsUnit",
-                     _value: 0
-                  },
-                  strokeStyleMiterLimit: 100,
-                  strokeStyleLineCapType: {
-                     _enum: "strokeStyleLineCapType",
-                     _value: "strokeStyleButtCap"
-                  },
-                  strokeStyleLineJoinType: {
-                     _enum: "strokeStyleLineJoinType",
-                     _value: "strokeStyleMiterJoin"
-                  },
-                  strokeStyleLineAlignment: {
-                     _enum: "strokeStyleLineAlignment",
-                     _value: "strokeStyleAlignCenter"
-                  },
-                  strokeStyleScaleLock: false,
-                  strokeStyleStrokeAdjust: false,
-                  strokeStyleLineDashSet: [],
-                  strokeStyleBlendMode: {
-                     _enum: "blendMode",
-                     _value: "normal"
-                  },
-                  strokeStyleOpacity: {
-                     _unit: "percentUnit",
-                     _value: 100
-                  },
-                  strokeStyleContent: {
-                     _obj: "solidColorLayer",
-                     color: {
-                        _obj: "RGBColor",
-                        red: 0,
-                        grain: 0,
-                        blue: 0
-                     }
-                  },
-                  strokeStyleResolution: 72
-               }
-            },
-            layerID: layerID,
-            _options: {
-               dialogOptions: "dontDisplay"
-            }
-         }
-      ],
-      {}
-   );
-   return result;
-}
 
 // 레이어의 현재 위치값을 리턴
 async function getCurrentLayerPosition(layer) {
@@ -1012,8 +895,6 @@ module.exports = {
    layOpacity,          // 투명도 설정
    makeGroup,           // 그룹 생성
    makeGroupFromSelectLayers, // 선택된 레이어들로 그룹 생성
-   makeShape,           // Shape 생성
-   makeWorkPath,        // WorkPath
    mergeLayers,         // 머지 레이어
    moveLayer,           // 레이어 인덱스 이동
    moveLayerOffset,     // 레이어 오프셋 이동

@@ -1,7 +1,8 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require('photoshop').action;
-const { makeShape, makeWorkPath, selectionForLayer, selectNoLays, selectByLayerID } = require("./lib/lib_layer");
+const { selectionForLayer, selectNoLays, selectByLayerID } = require("./lib/lib_layer");
+const { makeWorkPath } = require("./lib/lib_shape");
 
 async function convertImageToPath() {
     try {

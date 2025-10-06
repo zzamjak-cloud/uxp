@@ -5,7 +5,8 @@ const { createFolderToken, showAlert } = require("./lib/lib");
 const { createDoc, layerVisible, docDuplicate, docResizeCanvas, docResizeOptions, docCloseWithoutSaving } = require("./lib/lib_doc");
 const { saveForWebPNG } = require("./lib/lib_export");
 const { createLay, setLayerName, layOpacity, makeGroup, moveLayer, setLocking } = require("./lib/lib_layer");
-const { setForegroundColor, fillColor, makeShape, setPathFinderType } = require("./lib/lib_tool");
+const { setForegroundColor, fillColor, setPathFinderType } = require("./lib/lib_tool");
+const { createCustomShape } = require("./lib/lib_shape");
 const { handleError } = require("./lib/errorHandler");
 const { Logger } = require("./lib/logger");
 
@@ -174,7 +175,7 @@ async function appIconPSDGenerate() {
             await makeGroup("f");
 
             // 프레임 생성
-            await makeShape(0, 0, 0, 'rectangle', TOP, LEFT, BOTTOM, RIGHT, 0, 0, 0, 0, false, 0, 0, 0, 0);
+            await createCustomShape(0, 0, 0, 'rectangle', TOP, LEFT, BOTTOM, RIGHT, 0, 0, 0, 0, false, 0, 0, 0, 0);
             await moveLayer('next');
             await setLayerName("Frame");
             await setPathFinderType(1);
