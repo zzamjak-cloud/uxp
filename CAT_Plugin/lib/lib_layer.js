@@ -861,20 +861,6 @@ async function removeMask() {
    ], {});
 }
 
-// WorkPath 정보 얻기
-async function getWorkPath() {
-   const result = await batchPlay([
-      {
-          _obj: "get",
-          _target: [{
-              _ref: "path",
-              _property: "workPath"
-          }]
-      }
-   ], {});
-   return result;
-}
-
 module.exports = {
    actionCommands,
    collectAllLayerIDsInOrder, // 모든 레이어 ID를 순서대로 수집하는 함수 (재귀적, Background 레이어 포함)
@@ -888,7 +874,6 @@ module.exports = {
    duplicateLayer,      // 레이어 복제
    getLayerInfo,        // 레이어 정보 얻기
    getCurrentLayerPosition, // 레이어의 현재 위치값을 리턴
-   getWorkPath,         // WorkPath 정보 얻기
    layerTranslate,      // 레이어 이동
    layerTrim,           // 레이어 트림
    layTransform,        // 레이어 크기 조정

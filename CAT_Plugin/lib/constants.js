@@ -226,6 +226,7 @@ module.exports = {
         TRIANGLE: 'triangleTool',
         POLYGON: 'polygonTool',
         FREEFORM: 'freeformTool',
+        PEN : 'penTool'
     },
 
     // Common error messages

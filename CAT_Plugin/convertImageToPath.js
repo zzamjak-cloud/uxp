@@ -2,30 +2,47 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require('photoshop').action;
 const { selectionForLayer, selectNoLays, selectByLayerID } = require("./lib/lib_layer");
-const { makeWorkPath } = require("./lib/lib_shape");
+const { getWorkPath, makeWorkPath, selectPathByName, createShapeFromPathContents } = require("./lib/lib_shape");
+const { getForegroundRGBColor } = require("./lib/lib_tool");
 
 async function convertImageToPath() {
     try {
-        console.log("Convert Image To Path!!");
         const doc = app.activeDocument;
-        const selectedLayers = doc.activeLayers;
+        const selectedLayer = doc.activeLayers[0];
+        const foregroundColor = await getForegroundRGBColor();
+        console.log("Foreground Color:", foregroundColor);
 
-        if (selectedLayers.length === 0) {
+        if (selectedLayer === undefined) {
             throw new Error("선택한 레이어가 없습니다.");
         }
 
         await executeAsModal(async () => {
-            for (const layer of selectedLayers) {
-                // 현재 레이어 선택
-                await selectNoLays();
-                await selectByLayerID(layer.id);
 
-                // 레이어의 투명도 기반 선택 영역 생성
-                await selectionForLayer();
+            // 현재 레이어 선택
+            await selectNoLays();
+            await selectByLayerID(selectedLayer.id);
 
-                // 선택 영역을 Work Path로 변환
-                await makeWorkPath(1.0);
+            // 레이어의 투명도 기반 선택 영역 생성
+            await selectionForLayer();
+
+            // 선택 영역을 Work Path로 변환
+            await makeWorkPath(1.0);
+
+            // Work Path 선택하기
+            await selectPathByName("Work Path");
+
+            // ⭐ Work Path의 실제 경로 데이터 가져오기
+            const workPath = await getWorkPath();
+            const pathContents = workPath[0].pathContents;
+            // console.log("Path Contents:", workPath);
+
+            if (!pathContents) {
+                throw new Error("Work Path의 pathContents를 가져올 수 없습니다.");
             }
+
+            // 선택된 Work Path를 기반으로 Shape Layer 생성
+            await createShapeFromPathContents(pathContents, foregroundColor.r, foregroundColor.g, foregroundColor.b);
+
         });
 
     } catch (e) {

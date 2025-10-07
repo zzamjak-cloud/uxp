@@ -9,7 +9,6 @@ const { createMaskFromSelection } = require('./lib/lib_channel');
 const { 
     createLay,
     duplicateLayer,
-    getWorkPath,
     mergeLayers,
     rasterizeLayer,
     removeMask,
@@ -17,7 +16,7 @@ const {
     selectByLayerID,
     createLayerRenameCommands
 } = require('./lib/lib_layer');
-const { makeWorkPath } = require('./lib/lib_shape');
+const { getWorkPath, makeWorkPath } = require('./lib/lib_shape');
 const { executeModalWithHistoryGrouping } = require('./lib/lib');
 const { deselectAll, selectionAreaTransparency, selectionExpand, setBoundsRegion } = require('./lib/lib_select');
 const logger = new Logger('SplitToLayers');

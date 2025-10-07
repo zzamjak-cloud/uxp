@@ -41,6 +41,77 @@ async function rectangularMarqueeTool(top_value, left_value, bottom_value, right
     );
 }
 
+// 전경색 얻기 (RGB)
+async function getForegroundRGBColor() {
+   const result = await batchPlay(
+      [
+         {
+            _obj: "get",
+            _target: [
+               {
+                  _ref: "property",
+                  _property: "foregroundColor"
+               },
+               {
+                  _ref: "application",
+                  _enum: "ordinal",
+                  _value: "targetEnum"
+               }
+            ]
+         }
+      ],
+      {
+         synchronousExecution: false,
+         modalBehavior: "fail"
+      }
+   );
+   
+   const color = result[0]?.foregroundColor;
+   
+   // RGB 값 추출
+   if (color?._obj === "HSBColorClass") {
+      return hsbToRgb(
+         color.hue._value,
+         color.saturation,
+         color.brightness
+      );
+   }
+
+   console.log("color : ", color);
+   
+   return color;
+}
+
+// HSB를 RGB로 변환
+function hsbToRgb(hue, saturation, brightness) {
+   const h = hue / 360;
+   const s = saturation / 100;
+   const v = brightness / 100;
+   
+   let r, g, b;
+   
+   const i = Math.floor(h * 6);
+   const f = h * 6 - i;
+   const p = v * (1 - s);
+   const q = v * (1 - f * s);
+   const t = v * (1 - (1 - f) * s);
+   
+   switch (i % 6) {
+      case 0: r = v; g = t; b = p; break;
+      case 1: r = q; g = v; b = p; break;
+      case 2: r = p; g = v; b = t; break;
+      case 3: r = p; g = q; b = v; break;
+      case 4: r = t; g = p; b = v; break;
+      case 5: r = v; g = p; b = q; break;
+   }
+   
+   return {
+      r: Math.round(r * 255),
+      g: Math.round(g * 255),
+      b: Math.round(b * 255)
+   };
+}
+
 // 전경색 설정
 async function setForegroundColor(r, g, b) {
    const result = await batchPlay(
@@ -129,9 +200,10 @@ async function setPathFinderType(value) {
 }
 
 module.exports = {
-   fillColor,
-   rectangularMarqueeTool,
-   selectTool,
-   setForegroundColor,
-   setPathFinderType
+   fillColor,                   // 채우기 색상 설정
+   getForegroundRGBColor,       // 전경색 얻기 (RGB)
+   rectangularMarqueeTool,      // 직사각형 선택
+   selectTool,                  // Tool 선택
+   setForegroundColor,          // 전경색 설정
+   setPathFinderType            // 경로 찾기 타입 설정
 };

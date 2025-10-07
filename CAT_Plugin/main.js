@@ -20,6 +20,7 @@ const { clearHiddenEffects } = require("./clearHiddenEffects");
 const { splitToLayers } = require("./splitToLayers");
 const { clearEmptyLayers } = require("./clearEmptyLayers");
 const { test } = require("./test");
+const { convertImageToPath } = require("./convertImageToPath");
 // Export - 새로운 동적 폴더 시스템 사용
 // 기존 경로 설정 시스템은 제거됨
 
@@ -58,6 +59,7 @@ document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
 document.getElementById("splitToLayers").addEventListener("click", splitToLayers);
 document.getElementById("test").addEventListener("click", test);
+document.getElementById("convertImageToPath").addEventListener("click", convertImageToPath);
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
 document.getElementById("clearGuide").addEventListener("click", () => { clearGuides() });
