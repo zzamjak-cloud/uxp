@@ -205,7 +205,7 @@ module.exports = {
     },
 
     FILL_COLOR: {
-        FOREGROUND: 'forgroundColor',
+        FOREGROUND: 'foregroundColor',
         BACKGROUND: 'backgroundColor'
     },
 

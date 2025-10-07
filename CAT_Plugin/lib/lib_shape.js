@@ -232,7 +232,7 @@ async function createCustomShape(r, g, b, shape, top, left, bottom, right, topRi
 }
 
 // pathContents를 사용하여 Shape Layer 생성
-async function createShapeFromPathContents(pathContents, red = 0, green = 0, blue = 0) {
+async function createShapeFromPathContents(pathContents) {
     const result = await batchPlay([
         {
             "_obj": "make",
@@ -247,9 +247,9 @@ async function createShapeFromPathContents(pathContents, red = 0, green = 0, blu
                     "_obj": "solidColorLayer",
                     "color": {
                         "_obj": "RGBColor",
-                        "red": red,
-                        "grain": green,
-                        "blue": blue
+                        "red": 0,
+                        "grain": 0,
+                        "blue": 0
                     }
                 },
                 "shape": pathContents,  // ⭐ pathContents를 직접 shape으로 사용
@@ -311,6 +311,19 @@ async function createShapeFromPathContents(pathContents, red = 0, green = 0, blu
 
     // console.log("Shape creation result:", result);
     return result;
+}
+
+// WorkPath 삭제
+async function deleteWorkPath() {
+    await batchPlay([
+        {
+            _obj: "delete",
+            _target: [{
+                _ref: "path",
+                _property: "workPath"
+            }]
+        }
+    ], {});
 }
 
 // WorkPath 정보 얻기
@@ -532,6 +545,7 @@ module.exports = {
     convertPathToShape,
     createCustomShape,
     createShapeFromPathContents,
+    deleteWorkPath,
     getWorkPath,
     getWorkPathContents,
     makeWorkPath,

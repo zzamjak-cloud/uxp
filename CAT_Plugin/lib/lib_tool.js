@@ -161,9 +161,9 @@ async function selectTool(tool) {
 }
 
 // 채우기 색상 설정
-// value : "forgroundColor", "backgroundColor"
+// value : "foregroundColor", "backgroundColor"
 async function fillColor(value) {
-   const result = await batchPlay(
+   await batchPlay(
       [
          {
             _obj: "fill",
