@@ -40,6 +40,7 @@ document.getElementById("saveforwebjpg").addEventListener("click", () => { speed
 // Import extension_value '.psd' or '.png'
 document.getElementById("importPSD").addEventListener("click", () => { makeDocImportEntry('.psd') });
 document.getElementById("importPNG").addEventListener("click", () => { makeDocImportEntry('.png') });
+document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
 
 // Layers Renamer
 document.getElementById("prefix").addEventListener("click", () => {renamerLayers("prefix")});
@@ -54,12 +55,10 @@ document.getElementById("remove").addEventListener("click", () => {renamerLayers
 document.getElementById("appiconPSDgenerate").addEventListener("click", appIconPSDGenerate);
 document.getElementById("appiconmaker").addEventListener("click", () => appIconMaker("bicubicSharper"));
 document.getElementById("appiconmakerDot").addEventListener("click", () => appIconMaker("nearestNeighbor"));
-document.getElementById("applyGrid").addEventListener("click", applyGridLayout);
-// document.getElementById("animationMatchLayers").addEventListener("click", animationMatchLayers);
 document.getElementById("cleanPSD").addEventListener("click", cleanPSD);
-document.getElementById("splitToLayers").addEventListener("click", splitToLayers);
-document.getElementById("test").addEventListener("click", test);
 document.getElementById("convertImageToPath").addEventListener("click", convertImageToPath);
+document.getElementById("splitToLayers").addEventListener("click", splitToLayers);
+// document.getElementById("test").addEventListener("click", test);
 //Guide
 document.getElementById("applyGuide").addEventListener("click", () => { addAllGuides() });
 document.getElementById("clearGuide").addEventListener("click", () => { clearGuides() });

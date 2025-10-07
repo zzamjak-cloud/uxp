@@ -24,9 +24,10 @@
 
 ---
 
-### [버전] - 2025-10-06
+### [버전] - 2025-10-08
 **변경사항:**
-- exportSpeedSave : GIF 저장 기능 추가
+- *** exportSpeedSave *** : GIF 저장 기능 추가
+- *** convertImageToPath *** : 이미지를 shape 레이어로 변경하는 기능 추가
 - lib_export : saveForWeb 범용성 강화
 - index : import 디폴트값 수정 (docSize : 1280x1280), (sellSize : 128x128, cols : 10열)
 
