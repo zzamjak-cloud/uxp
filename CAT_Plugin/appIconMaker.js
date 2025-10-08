@@ -5,12 +5,9 @@ const { createFolderToken, showAlert } = require("./lib/lib");
 const { createDoc, layerVisible, docDuplicate, docResizeCanvas, docResizeOptions, docCloseWithoutSaving } = require("./lib/lib_doc");
 const { saveForWebPNG } = require("./lib/lib_export");
 const { createLay, setLayerName, layOpacity, makeGroup, moveLayer, setLocking } = require("./lib/lib_layer");
-const { setForegroundColor, fillColor, setPathFinderType } = require("./lib/lib_tool");
+const { setPathFinderType } = require("./lib/lib_tool");
 const { createCustomShape } = require("./lib/lib_shape");
 const { handleError } = require("./lib/errorHandler");
-const { Logger } = require("./lib/logger");
-
-const logger = new Logger('AppIconMaker');
 
 // 앱 아이콘 설정
 const APP_ICONS = {
@@ -48,8 +45,8 @@ async function prepareExportFolders() {
             throw new Error('폴더가 선택되지 않았습니다.');
         }
 
+        // 저장 폴더 경로
         const saveFolderPath = saveFolder.nativePath;
-        logger.info(`Selected save folder: ${saveFolderPath}`);
 
         // 각 플랫폼별 폴더 생성
         const folders = {
@@ -81,8 +78,6 @@ async function generateIcon(size, folderPath, folderToken, platformName, sampleM
             await saveForWebPNG(fileName, folderToken, fileToken);
             await docCloseWithoutSaving(curDoc);
         });
-
-        logger.info(`Generated icon: ${fileName}`);
     } catch (error) {
         throw new Error(`아이콘 생성 실패 (${size}px): ${error.message}`);
     }
@@ -113,8 +108,6 @@ async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_nam
             await saveForWebPNG(fileName, folderToken, fileToken);
             await docCloseWithoutSaving(curDoc);
         });
-
-        logger.info(`Generated adaptive icon layer: ${fileName}`);
     } catch (error) {
         throw new Error(`적응형 아이콘 레이어 처리 실패 (${size}px): ${error.message}`);
     }
@@ -123,7 +116,6 @@ async function processAdaptiveIconLayer(size, folderPath, folderToken, layer_nam
 // 앱 아이콘 생성 메인 함수
 async function appIconMaker(sampleMethodName) {
     try {
-        logger.info('Starting app icon generation');
         const { saveFolderPath, folders } = await prepareExportFolders();
 
         // iOS 아이콘 생성
@@ -143,7 +135,6 @@ async function appIconMaker(sampleMethodName) {
         }
 
         await showAlert("앱 아이콘 생성이 완료되었습니다!");
-        logger.info('App icon generation completed successfully');
 
     } catch (error) {
         await handleError(error, 'app_icon_maker');
@@ -153,20 +144,18 @@ async function appIconMaker(sampleMethodName) {
 // PSD 템플릿 생성
 async function appIconPSDGenerate() {
     try {
-        logger.info('Starting PSD template generation');
-
         await executeAsModal(async () => {
             // 문서 생성
             await createDoc(
                 "Origin", 
-                PSD_TEMPLATE.DOC_SIZE, 
-                PSD_TEMPLATE.DOC_SIZE, 
-                72, 
-                'RGBColorMode', 
-                'transparent'
+                PSD_TEMPLATE.DOC_SIZE,  // 2048
+                PSD_TEMPLATE.DOC_SIZE,  // 2048
+                72,  // 해상도
+                'RGBColorMode',    // 색상 모드
+                'transparent'   // 배경 색상
             );
 
-            const { TOP, LEFT, BOTTOM, RIGHT } = PSD_TEMPLATE.FRAME_POSITION;
+            const { TOP, LEFT, BOTTOM, RIGHT } = PSD_TEMPLATE.FRAME_POSITION; // { TOP: 355, LEFT: 355, BOTTOM: 1693, RIGHT: 1693 }
 
             // 레이어 그룹 생성 및 구성
             await makeGroup("b");
@@ -181,10 +170,8 @@ async function appIconPSDGenerate() {
             await setPathFinderType(1);
             await layOpacity(50);
             await setLocking(true);
+            await showAlert('앱아이콘 제작을 위한 PSD 템플릿이 생성되었습니다.');
         });
-
-        logger.info('PSD template generated successfully');
-
     } catch (error) {
         await handleError(error, 'psd_template_generator');
     }

@@ -3,9 +3,7 @@ const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { selectNoLays, selectByLayerID, getLayerInfo } = require("./lib/lib_layer");
 const { handleError } = require("./lib/errorHandler");
-const { Logger } = require("./lib/logger");
-
-const logger = new Logger('ClearHiddenEffects');
+const { showAlert } = require("./lib/lib");
 
 /**
  * 모든 이펙트를 제거한 후 활성화된 이펙트들만 다시 적용하는 함수
@@ -15,8 +13,6 @@ const logger = new Logger('ClearHiddenEffects');
  */
 async function clearLayerStyleAndReapplyEnabled(layerEffects, effectKeys, layerId) {
     try {
-        logger.info(`Clearing disabled effects and keeping only enabled ones`);
-        
         // 1. 활성화된 이펙트들만으로 새로운 layerEffects 객체 생성
         const newLayerEffects = {
             _obj: "layerEffects"
@@ -39,24 +35,20 @@ async function clearLayerStyleAndReapplyEnabled(layerEffects, effectKeys, layerI
                     
                     if (enabledMultiEffects.length > 0) {
                         newLayerEffects[key] = enabledMultiEffects;
-                        logger.info(`Preserved ${enabledMultiEffects.length} enabled ${key.replace('Multi', '')} effects`);
                     }
                 }
             } else {
                 // 단일 이펙트 처리 - 활성화된 것만 포함
                 if (effectData && effectData.enabled === true && effectData.present === true) {
                     newLayerEffects[key] = effectData;
-                    logger.info(`Preserved enabled ${key} effect`);
                 }
             }
         }
         
         // 2. 새로운 layerEffects로 설정
         await setLayerEffects(newLayerEffects, layerId);
-        logger.info(`Successfully updated layer effects`);
         
     } catch (error) {
-        logger.error(`Error in clearLayerStyleAndReapplyEnabled:`, error);
         throw error;
     }
 }
@@ -86,7 +78,6 @@ async function setLayerEffects(layerEffects, layerId) {
             { synchronousExecution: true }
         );
     } catch (error) {
-        logger.error(`Failed to set layer effects:`, error);
         throw error;
     }
 }
@@ -115,7 +106,7 @@ async function clearEffectsPerLayer(layer) {
         const hasDisabledEffects = hasDisabledEffectsInLayer(layerEffects, effectKeys);
         
         if (!hasDisabledEffects) {
-            logger.info(`No disabled effects found on layer: ${layer.name}`);
+            console.log(`${layer.name}: 비활성화된 이펙트가 없습니다.`);
             return;
         }
         
@@ -123,7 +114,6 @@ async function clearEffectsPerLayer(layer) {
         await clearLayerStyleAndReapplyEnabled(layerEffects, effectKeys, layer.id);
         
     } catch (error) {
-        logger.error(`Error processing layer ${layer.name}:`, error);
         throw error;
     }
 }
@@ -168,8 +158,7 @@ async function clearHiddenEffects() {
         const selectedLayers = doc.activeLayers;
 
         if (selectedLayers.length === 0) {
-            logger.warn('No layers selected');
-            await app.showAlert('선택된 레이어가 없습니다.');
+            await showAlert('선택된 레이어가 없습니다.');
             return;
         }
 
@@ -188,7 +177,7 @@ async function clearHiddenEffects() {
                     processedCount++;
                     
                 } catch (layerError) {
-                    logger.error(`Error processing layer ${layer.name}:`, layerError);
+                    console.log(`${layer.name}:`, layerError);
                     errorCount++;
                     // 개별 레이어 오류는 무시하고 계속 진행
                     continue;

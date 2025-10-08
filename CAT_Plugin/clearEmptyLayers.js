@@ -1,5 +1,4 @@
 const app = require("photoshop").app;
-const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { showAlert } = require("./lib/lib");
 const { deleteLayerByID } = require("./lib/lib_layer");

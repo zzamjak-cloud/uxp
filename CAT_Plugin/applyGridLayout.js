@@ -1,17 +1,22 @@
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
-const { batchPlay } = require('photoshop').action;
-const { getCurrentLayerPosition, moveLayerOffset, selectByLayerID, selectNoLays } = require('./lib/lib_layer');
+const { 
+    getCurrentLayerPosition, 
+    moveLayerOffset, 
+    selectByLayerID, 
+    selectNoLays
+    } = require('./lib/lib_layer');
 
 const STARTING_POINT = 0;   // 전역변수 : 레이어정렬 시작포인트 (0,0)
 
 // 레이어를 셀의 중심으로 이동
+// targetCenterX, targetCenterY : 그리드 셈의 중심점
 async function moveLayerToPosition(layer, targetCenterX, targetCenterY) {
     try {
         // 현재 레이어의 bounds 정보 가져오기
         const currentBounds = await getCurrentLayerPosition(layer);
         
-        // 레이어의 크기 계산
+        // 레이어의 크기 계산 width, height
         const layerWidth = currentBounds.right._value - currentBounds.left._value;
         const layerHeight = currentBounds.bottom._value - currentBounds.top._value;
 
@@ -50,15 +55,8 @@ async function applyGridLayout() {
             const cellCenterOffsetX = gridWidth / 2;
             const cellCenterOffsetY = gridHeight / 2;
 
-            console.log(`Grid settings - Width: ${gridWidth}, Height: ${gridHeight}, Columns: ${columnsPerRow}`);
-
             // 레이어를 알파벳 순서로 정렬
             const sortedLayers = [...selectedLayers].sort((a, b) => a.name.localeCompare(b.name));
-            
-            console.log("Layers will be arranged alphabetically:");
-            sortedLayers.forEach((layer, index) => {
-                console.log(`${index + 1}. ${layer.name}`);
-            });
 
             await selectNoLays();
 

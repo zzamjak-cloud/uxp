@@ -1,9 +1,8 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
-const { batchPlay } = require('photoshop').action;
 const { selectionForLayer, selectNoLays, selectByLayerID } = require("./lib/lib_layer");
 const { deleteWorkPath, getWorkPath, makeWorkPath, selectPathByName, createShapeFromPathContents } = require("./lib/lib_shape");
-const { fillColor, getForegroundRGBColor } = require("./lib/lib_tool");
+const { fillColor } = require("./lib/lib_tool");
 const { FILL_COLOR } = require("./lib/constants");
 
 async function convertImageToPath() {

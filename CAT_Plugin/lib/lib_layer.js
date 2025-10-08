@@ -1,6 +1,5 @@
 const { batchPlay } = require("photoshop").action;
 const { executeAsModal } = require('photoshop').core;
-const { COMMAND } = require('./constants');
 
 // "mergeVisible" : 레이어 머지
 // "cutToLayer" : 이미지 잘라내기
@@ -490,7 +489,7 @@ async function mergeLayers() {
    await batchPlay(
       [
          {
-            "_obj": COMMAND.MERGE_LAYERS_NEW,
+            "_obj": 'mergeLayersNew',
             "apply": true,
             "_isCommand": false
          }
@@ -504,7 +503,7 @@ async function relinkToFile(file_token) {
    await batchPlay(
       [
          {
-            _obj: "placedLayerRelinkToFile",
+            _obj: 'placedLayerRelinkToFile',
             null: {
                _path: file_token,
                _kind: "local"
@@ -548,9 +547,7 @@ async function reorderEffect(keyName, from_idx, to_idx) {
    );
 }
 
-/**
- * 레이어 래스터화
- */
+// 레이어 래스터화
 async function rasterizeLayer() {
    try {
        await batchPlay([

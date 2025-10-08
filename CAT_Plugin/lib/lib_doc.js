@@ -69,6 +69,8 @@ async function docResizeCanvas(doc, size) {
 }
 
 // Image 크기 조정 (옵션 설정)
+// unitValue : 'pixelsUnit', 'percentUnit'
+// interpolationValue : 'nearestNeighbor', 'bicubicSharper', 'bicubic'
 async function docResizeOptions(doc, width, height, unitValue = 'pixelsUnit', interpolationValue = 'nearestNeighbor') {
    await batchPlay(
        [{

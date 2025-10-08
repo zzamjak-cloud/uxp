@@ -37,6 +37,10 @@ module.exports = {
             RGB_COLOR: 'RGBColorMode',
             CMYK_COLOR: 'CMYKColorMode',
             GRAYSCALE_COLOR: 'grayscaleColorMode',
+        },
+        UNIT: {
+            PIXELS_UNIT: 'pixelsUnit',
+            PERCENT_UNIT: 'percentUnit'
         }
     },
 
@@ -79,6 +83,17 @@ module.exports = {
             LINEAR_DODGE: 'linearDodge',
             VIVID_LIGHT: 'vividLight',
             LINEAR_LIGHT: 'linearLight',
+        },
+        ORDINAL: {
+            NEXT: 'next',
+            PREVIOUS: 'previous',
+            FRONT: 'front',
+            BACK: 'back'
+        },
+        PLACE: {
+            BEFORE: 'placeBefore',
+            AFTER: 'placeAfter',
+            INSIDE: 'placeInside'
         }
     },
     LAYER_STYLE: {
@@ -172,6 +187,13 @@ module.exports = {
         ELLIPSE: 'ellipse',
     },
 
+    SHAPE: {
+        TYPE: {
+            RECTANGLE: 'rectangle',
+            ELLIPSE: 'ellipse',
+        }
+    },
+
     SELECTION: {
         REVEAL_SELECTION: 'revealSelection',
         REVEAL_SELECTION_ONLY: 'revealSelectionOnly',
@@ -238,12 +260,13 @@ module.exports = {
     },
 
     COMMAND: {
-        MERGE_VISIBLE: 'mergeVisible',
         CUT_TO_LAYER: 'cutToLayer',
         CLEAR_ALL_GUIDES: 'clearAllGuides',
-        PLACED_LAYER_EDIT_CONTENTS: 'placedLayerEditContents',
-        NEW_PLACED_LAYER: 'newPlacedLayer',
         MERGE_LAYERS_NEW: 'mergeLayersNew',
+        MERGE_VISIBLE: 'mergeVisible',
+        NEW_PLACED_LAYER: 'newPlacedLayer',
+        PLACED_LAYER_EDIT_CONTENTS: 'placedLayerEditContents',
+        PLACED_LAYER_RELINK_TO_FILE: 'placedLayerRelinkToFile',
     },
 
     MESSAGES: {

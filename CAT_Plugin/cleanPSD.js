@@ -3,14 +3,12 @@ const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
 const { selectNoLays } = require('./lib/lib_layer');
 const { saveAsPSD } = require('./lib/lib_export');
-const { actionCommands, selectAllLayersByID, collectAllLayerIDsInOrder } = require("./lib/lib_layer");
+const { selectAllLayersByID, collectAllLayerIDsInOrder } = require("./lib/lib_layer");
 const { createDocCopyLayers, docCloseWithoutSaving } = require('./lib/lib_doc');
 
 
 async function cleanPSD() {
     try {
-        console.log("Clean PSD 시작");
-        
         // 현재 문서 참조 저장 (ID로 안전하게 참조)
         const originalDoc = app.activeDocument;
         const originalDocID = originalDoc.id;
