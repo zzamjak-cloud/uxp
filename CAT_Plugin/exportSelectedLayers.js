@@ -1,15 +1,11 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require('photoshop').app;
-const { batchPlay } = require('photoshop').action;
 const { executeAsModal } = require('photoshop').core;
-const { getSaveFolderPath, sanitizeFileName, getDataFolder } = require('./lib/lib');
+const { getSaveFolderPath, sanitizeFileName } = require('./lib/lib');
 const { docCloseWithoutSaving, createDocCopyLayers } = require('./lib/lib_doc');
 const { saveForWebPNG, saveAsPSD } = require('./lib/lib_export');
 const { selectByLayerID, selectNoLays, layerTrim } = require('./lib/lib_layer');
-const { handleError } = require('./lib/errorHandler');
-const { Logger } = require('./lib/logger');
-
-const logger = new Logger('ExportSelectedToPSD');
+const { showAlert } = require('./lib/lib');
 
 // 폴더 프리셋 관리 클래스
 class FolderPresetManager {
@@ -25,7 +21,7 @@ class FolderPresetManager {
             const stored = localStorage.getItem(this.storageKey);
             return stored ? JSON.parse(stored) : [];
         } catch (error) {
-            logger.error(`Failed to load folder presets: ${error.message}`);
+            console.log(`${error.message}`);
             return [];
         }
     }
@@ -34,9 +30,9 @@ class FolderPresetManager {
     savePresets() {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(this.presets));
-            logger.info(`Saved ${this.presets.length} folder presets`);
+            console.log(`Saved ${this.presets.length} folder presets`);
         } catch (error) {
-            logger.error(`Failed to save folder presets: ${error.message}`);
+            console.log(`Failed to save folder presets: ${error.message}`);
         }
     }
 
@@ -63,7 +59,7 @@ class FolderPresetManager {
 
         this.presets.push(preset);
         this.savePresets();
-        logger.info(`Added folder preset: ${folderName} (${folderPath})`);
+        console.log(`폴더 프리셋 추가 : ${folderName} (${folderPath})`);
         return preset;
     }
 
@@ -73,7 +69,7 @@ class FolderPresetManager {
         if (index > -1) {
             const removed = this.presets.splice(index, 1)[0];
             this.savePresets();
-            logger.info(`Removed folder preset: ${removed.name}`);
+            console.log(`폴더 프리셋 제거 : ${removed.name}`);
         }
     }
 
@@ -120,7 +116,6 @@ function createFolderPresetItem(preset) {
     removeButton.addEventListener('click', () => {
         folderPresetManager.removePreset(preset.id);
         presetItem.remove();
-        logger.info(`Removed folder preset: ${preset.name}`);
     });
 
     presetItem.appendChild(folderDisplay);
@@ -160,14 +155,10 @@ async function addNewFolderPreset() {
         const preset = folderPresetManager.addPreset(folderPath, folderName);
         renderFolderPresets();
         
-        logger.info(`폴더 프리셋이 추가되었습니다: ${folderName}`);
+        console.log(`폴더 프리셋이 추가되었습니다: ${folderName}`);
         
     } catch (error) {
-        logger.error(`Failed to add folder preset: ${error.message}`);
         console.error(`폴더 프리셋 추가 실패: ${error.message}`);
-        
-        // showAlert를 사용하여 에러 메시지 표시
-        const { showAlert } = require('./lib/lib');
         await showAlert(error.message);
     }
 }
@@ -184,9 +175,8 @@ function selectFolderPreset(preset) {
         // 선택된 프리셋을 데이터 폴더에 저장
         saveSelectedFolder(preset);
         
-        logger.info(`Selected folder preset: ${preset.name}`);
     } catch (error) {
-        logger.error(`Failed to select folder preset: ${error.message}`);
+        console.log(`폴더 프리셋 선택 실패 : ${error.message}`);
     }
 }
 
@@ -197,9 +187,8 @@ async function saveSelectedFolder(preset) {
         const file = await dataFolder.createFile('selectedFolder.txt', { overwrite: true });
         await file.write(JSON.stringify(preset));
         
-        logger.info(`Saved selected folder: ${preset.name}`);
     } catch (error) {
-        logger.error(`Failed to save selected folder: ${error.message}`);
+        console.log(`선택된 폴더 저장 실패 : ${error.message}`);
     }
 }
 
@@ -220,7 +209,6 @@ async function loadSelectedFolder() {
                     currentFolderDisplay.title = preset.path;
                 }
                 
-                logger.info(`Loaded selected folder: ${preset.name}`);
                 return preset;
             }
         }
@@ -234,7 +222,7 @@ async function loadSelectedFolder() {
         
         return null;
     } catch (error) {
-        logger.error(`Failed to load selected folder: ${error.message}`);
+        console.log(`선택된 폴더 로드 실패 : ${error.message}`);
         
         // 에러 발생 시에도 디폴트 텍스트 설정
         const currentFolderDisplay = document.getElementById('currentFolderDisplay');
@@ -343,7 +331,6 @@ async function exportSelectedFile(pathId, fileType) {
         for (let i = 0; i < validLayers.length; i++) {
             const layer = validLayers[i];
             try {
-                logger.info(`Processing ${i + 1}/${validLayers.length}: ${layer.name}`);
                 await processLayer(layer, originalDoc, saveFolder, fileType, isMaintainDocSize);
                 successCount++;
             } catch (error) {
@@ -355,7 +342,7 @@ async function exportSelectedFile(pathId, fileType) {
             }
         }
     } catch (error) {
-        await handleError(error, 'export_selected_to_psd');
+        console.log(error);
     }
 }
 
@@ -376,7 +363,7 @@ async function processLayer(layer, originalDoc, saveFolder, fileType, isMaintain
             }
         });
     } catch (error) {
-        logger.error(`❌ Error processing layer ${layer.name}: ${error.message}`);
+        console.log(`❌ Error processing layer ${layer.name}: ${error.message}`);
         
         // 원본 문서로 안전하게 복귀
         try {
@@ -384,7 +371,7 @@ async function processLayer(layer, originalDoc, saveFolder, fileType, isMaintain
                 app.activeDocument = originalDoc;
             }
         } catch (docError) {
-            logger.warn(`Failed to return to original document: ${docError.message}`);
+            console.log(`Failed to return to original document: ${docError.message}`);
         }
         
         throw new Error(`레이어 "${layer.name}" 처리 실패: ${error.message}`);
@@ -412,8 +399,6 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, 
             throw new Error('새 문서 생성에 실패했습니다.');
         }
 
-        logger.info(`Created new document: ${newDoc.name} (ID: ${newDoc.id})`);
-
         // 4. 문서 크기 유지 옵션에 따른 처리
         if (!isMaintainDocSize) 
             await layerTrim();
@@ -428,23 +413,23 @@ async function copyLayerToNewDocument(layer, originalDoc, saveFolder, fileType, 
         app.activeDocument = originalDoc;
 
     } catch (error) {
-        logger.error(`Error in copyLayerToNewDocument: ${error.message}`);
+        console.log(`Error in copyLayerToNewDocument: ${error.message}`);
         
         // 에러 발생 시 정리 작업
         try {
             if (newDoc && newDoc.id !== originalDoc.id) {
-                logger.info(`Cleaning up: closing document ${newDoc.name}`);
+                console.log(`Cleaning up: closing document ${newDoc.name}`);
                 await docCloseWithoutSaving(newDoc);
             }
         } catch (cleanupError) {
-            logger.warn(`Cleanup failed: ${cleanupError.message}`);
+            console.log(`Cleanup failed: ${cleanupError.message}`);
         }
         
         // 원본 문서로 복귀
         try {
             app.activeDocument = originalDoc;
         } catch (docError) {
-            logger.warn(`Failed to return to original document: ${docError.message}`);
+            console.log(`Failed to return to original document: ${docError.message}`);
         }
         
         throw error;
@@ -463,7 +448,6 @@ async function saveFiles(layerName, saveFolder, fileType) {
         const pngFileToken = await fs.createSessionToken(pngFileEntry);
         
         await saveForWebPNG(pngFileName, saveFolder.folderToken, pngFileToken);
-        logger.info(`Saved PNG: ${pngFileName}`);
         
         // PSD 저장 (PSD 타입일 때만)
         if (fileType === 'psd') {
@@ -473,7 +457,7 @@ async function saveFiles(layerName, saveFolder, fileType) {
             const psdFileToken = await fs.createSessionToken(psdFileEntry);
             
             await saveAsPSD(psdFileToken);
-            logger.info(`Saved PSD: ${psdFileName}`);
+            console.log(`Saved PSD: ${psdFileName}`);
         }
 
     } catch (error) {

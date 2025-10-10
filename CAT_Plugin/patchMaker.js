@@ -3,11 +3,6 @@ const { executeAsModal } = require('photoshop').core;
 const { selectLayerByName, setLayerName, deleteLayer, layerTranslate, layerTrim, actionCommands } = require('./lib/lib_layer');
 const { executeModalWithHistoryGrouping } = require('./lib/lib');
 const { rectangularMarqueeTool } = require('./lib/lib_tool');
-const { handleError } = require('./lib/errorHandler');
-const { Logger } = require('./lib/logger');
-const { COMMAND, GUIDE } = require('./lib/constants');
-
-const logger = new Logger('PatchMaker');
 
 const PATCH_TYPES = {
     VERTICAL: 'vertical',           // 수직 2개
@@ -39,7 +34,7 @@ async function createSelectionAndCut(top, left, bottom, right, layerName) {
     try {
         await selectLayerByName("Source");
         await rectangularMarqueeTool(top, left, bottom, right);
-        await actionCommands(COMMAND.CUT_TO_LAYER);
+        await actionCommands('cutToLayer');
         await setLayerName(layerName);
     } catch (error) {
         throw new Error(`Failed to process ${layerName}: ${error.message}`);
@@ -57,7 +52,7 @@ async function applyVerticalPatchInternal(v1, v2, bounds) {
     await deleteLayer();
     await selectLayerByName("right");
     await layerTranslate(app.activeDocument.activeLayers[0], -(v2-v1), 0);
-    await actionCommands(COMMAND.MERGE_VISIBLE);
+    await actionCommands('mergeVisible');
     await layerTrim();
     await setLayerName("Source");
 }
@@ -73,7 +68,7 @@ async function applyHorizontalPatchInternal(h1, h2, bounds) {
     await deleteLayer();
     await selectLayerByName("bottom");
     await layerTranslate(app.activeDocument.activeLayers[0], 0, -(h2-h1));
-    await actionCommands(COMMAND.MERGE_VISIBLE);
+    await actionCommands('mergeVisible');
     await layerTrim();
     await setLayerName("Source");
 }
@@ -100,7 +95,7 @@ function getGuides(guides) {
 
     for (const guide of guides) {
         const coordinate = parseInt(guide.coordinate);
-        guide.direction === GUIDE.ORIENTATIONS.VERTICAL ? 
+        guide.direction === 'vertical' ? 
             verticalGuides.push(coordinate) : 
             horizontalGuides.push(coordinate);
     }
@@ -146,7 +141,6 @@ async function patchMaker() {
 
         const [verticalGuides, horizontalGuides] = getGuides(guides);
         const patchType = analyzePatchType(verticalGuides.length, horizontalGuides.length);
-        logger.info(`Applying patch type: ${patchType}`);
 
         // 모든 패치 작업을 하나의 히스토리로 그룹핑
         await executeModalWithHistoryGrouping(
@@ -197,14 +191,14 @@ async function patchMaker() {
                 }
 
                 // 가이드 제거
-                await actionCommands(COMMAND.CLEAR_ALL_GUIDES);
+                await actionCommands('clearAllGuides');
             },
             "패치 메이커",  // 히스토리 이름
             "Patch Maker"  // 명령 이름
         );
 
     } catch (error) {
-        await handleError(error, 'patch_maker');
+        console.log(error);
     }
 }
 

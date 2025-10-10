@@ -1,14 +1,10 @@
 const fs = require('uxp').storage.localFileSystem;
 const app = require("photoshop").app;
+const { executeAsModal } = require('photoshop').core;
 const { showAlert } = require("./lib/lib");
 const { actionCommands, relinkToFile, layerTrim, selectNoLays, selectByLayerID } = require("./lib/lib_layer");
 const { docCloseWithoutSaving } = require("./lib/lib_doc");
 const { saveForWebPNG, saveAsPSD } = require("./lib/lib_export");
-const { executeAsModal } = require('photoshop').core;
-const { Logger } = require('./lib/logger');
-const { COMMAND } = require('./lib/constants');
-
-const logger = new Logger('ExportSelectedAndLink');
 
 // 선택된 폴더 프리셋 로드
 async function loadSelectedFolder() {
@@ -20,14 +16,13 @@ async function loadSelectedFolder() {
             if (entry.name === 'selectedFolder.txt') {
                 const content = await entry.read();
                 const preset = JSON.parse(content);
-                
-                logger.info(`Loaded selected folder: ${preset.name}`);
+
                 return preset;
             }
         }
         return null;
     } catch (error) {
-        logger.error(`Failed to load selected folder: ${error.message}`);
+        await showAlert(`${error.message}`);
         return null;
     }
 }
@@ -92,7 +87,7 @@ async function savePngAndLinkToPSD(txt_file_name) {
             if (layer.kind === 'smartObject') {
                 await executeAsModal( async() => {
                     await selectByLayerID(layer.id);
-                    await actionCommands(COMMAND.PLACED_LAYER_EDIT_CONTENTS);
+                    await actionCommands('placedLayerEditContents');
                     // 문서 크기 유지 옵션에 따른 처리
                     if (!docSizeCheck) {
                         await layerTrim();
@@ -103,8 +98,8 @@ async function savePngAndLinkToPSD(txt_file_name) {
             } else if (layer.kind === 'group') {
                 await executeAsModal( async() => {
                     await selectByLayerID(layer.id);
-                    await actionCommands(COMMAND.NEW_PLACED_LAYER);
-                    await actionCommands(COMMAND.PLACED_LAYER_EDIT_CONTENTS);
+                    await actionCommands('newPlacedLayer');             // 스마트 오브젝트 생성
+                    await actionCommands('placedLayerEditContents');    // 스마트 오브젝트 편집 모드 진입하기
                     // 문서 크기 유지 옵션에 따른 처리
                     if (!docSizeCheck) {
                         await layerTrim();
@@ -112,13 +107,12 @@ async function savePngAndLinkToPSD(txt_file_name) {
                 },{});
                 await saveAndLink(targetEntry);
             } else {
-                showAlert("스마트오브젝트 또는 그룹레이어를 선택하세요.");
+                await showAlert("스마트오브젝트 또는 그룹레이어를 선택하세요.");
                 return;
             }
         }
         
     } catch (error) {
-        logger.error(`Error in savePngAndLinkToPSD: ${error.message}`);
         await showAlert(error.message);
     }   
 }
@@ -160,7 +154,7 @@ async function saveAndLink(entry) {
             await selectNoLays();
         },{});
     } else {
-        showAlert("Smart Object가 아닙니다.");
+        await showAlert("Smart Object가 아닙니다.");
     }
 }
 

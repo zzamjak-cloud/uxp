@@ -7,7 +7,6 @@ const { saveForWebPNG } = require("./lib/lib_export");
 const { createLay, setLayerName, layOpacity, makeGroup, moveLayer, setLocking } = require("./lib/lib_layer");
 const { setPathFinderType } = require("./lib/lib_tool");
 const { createCustomShape } = require("./lib/lib_shape");
-const { handleError } = require("./lib/errorHandler");
 
 // 앱 아이콘 설정
 const APP_ICONS = {
@@ -137,7 +136,7 @@ async function appIconMaker(sampleMethodName) {
         await showAlert("앱 아이콘 생성이 완료되었습니다!");
 
     } catch (error) {
-        await handleError(error, 'app_icon_maker');
+        console.log(error);
     }
 }
 
@@ -173,7 +172,7 @@ async function appIconPSDGenerate() {
             await showAlert('앱아이콘 제작을 위한 PSD 템플릿이 생성되었습니다.');
         });
     } catch (error) {
-        await handleError(error, 'psd_template_generator');
+        console.log(error);
     }
 }
 

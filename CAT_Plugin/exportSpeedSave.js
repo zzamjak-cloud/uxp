@@ -2,7 +2,6 @@ const app = require('photoshop').app;
 const fs = require('uxp').storage.localFileSystem;
 const { executeAsModal } = require('photoshop').core;
 const { saveForWebPNG, saveForWebJPG, saveForWebGIF } = require("./lib/lib_export");
-const { showAlert } = require("./lib/lib");
 
 async function speedSave(extension) {
    try {
@@ -32,7 +31,6 @@ async function speedSave(extension) {
          }, 
          {"commandName": "SaveForWeb GIF"});
       }
-      // showAlert(`${extension} 저장 완료`);
       console.log(`${extension} 저장 완료`);
 
    } catch (error) {

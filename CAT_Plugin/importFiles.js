@@ -2,18 +2,20 @@ const app = require('photoshop').app;
 const fs = require('uxp').storage.localFileSystem;
 const { executeAsModal } = require('photoshop').core;
 const { createDoc} = require("./lib/lib_doc");
-const { createLay, relinkToFile, actionCommands, layTransform, deleteLayer, selectLayerByName} = require("./lib/lib_layer");
-const { handleError } = require("./lib/errorHandler");
-const { Logger } = require("./lib/logger");
-const { COMMAND, DOCUMENT } = require('./lib/constants');
-
-const logger = new Logger('ImportExport');
+const { 
+    actionCommands, 
+    createLay, 
+    deleteLayer, 
+    layTransform, 
+    relinkToFile, 
+    selectLayerByName} = require("./lib/lib_layer");
 
 // 도큐먼트 생성 및 PSD 파일 임포트 extension_value '.psd' or '.png'
 async function makeDocImportEntry(extension_value) {
     try {
         const docSize_width = parseInt(document.getElementById('docWidth').value) || 128;
         const docSize_height = parseInt(document.getElementById('docHeight').value) || 128;
+
         // 폴더 선택
         const folder = await fs.getFolder();
         if (!folder) {
@@ -29,12 +31,10 @@ async function makeDocImportEntry(extension_value) {
         if (psdFiles.length === 0) {
             throw new Error('선택한 폴더에 PSD 파일이 없습니다.');
         }
-
-        logger.info(`Found ${psdFiles.length} PSD files`);
         
-        // 새 도큐먼트 생성
         await executeAsModal(async () => {
-            await createDoc("Imported_Assets", docSize_width, docSize_height, DOCUMENT.RESOLUTION, DOCUMENT.COLOR_MODE, DOCUMENT.BACKGROUND.TRANSPARENT);
+            // 새 도큐먼트 생성
+            await createDoc("Imported_Assets", docSize_width, docSize_height, 72, 'RGBColorMode', 'transparent');
             const doc = app.activeDocument;
 
             // 첫 번째 레이어 제거용
@@ -45,7 +45,7 @@ async function makeDocImportEntry(extension_value) {
                 const token = await fs.createSessionToken(file);
                 
                 await createLay();
-                await actionCommands(COMMAND.NEW_PLACED_LAYER);
+                await actionCommands('newPlacedLayer');  // 스마트 오브젝트 만들기
                 await relinkToFile(token);
                 await layTransform(100, 100);
 
@@ -55,15 +55,13 @@ async function makeDocImportEntry(extension_value) {
                     await deleteLayer();
                     firstLayer = false;
                 }
-
-                logger.info(`Imported: ${file.name}`);
             }
         });
 
-        logger.info('Import completed successfully');
+        console.log('Import completed successfully');
 
     } catch (error) {
-        await handleError(error, 'import_psd');
+        console.log(error);
     }
 }
 

@@ -1,5 +1,4 @@
 const { batchPlay } = require("photoshop").action;
-const { DOCUMENT } = require('./constants');
 
 // mode : DOCUMENT.COLOR_MODE, fill : DOCUMENT.BACKGROUND.TRANSPARENT
 async function createDoc(name, width, height, resolution, mode, fill) {
@@ -41,7 +40,7 @@ async function createDocCopyLayers(doc_name) {
 }
 
 // 컬러 모드 변환
-async function convertColorMode(targetMode = DOCUMENT.COLOR_MODE.INDEXED_COLOR, options = {}) {
+async function convertColorMode(targetMode = "indexedColorMode", options = {}) {
     const defaultOptions = {
         colors: 256,
         forced: { _enum: "forcedColors", _value: "none" },

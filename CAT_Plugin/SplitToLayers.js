@@ -1,8 +1,6 @@
 const app = require('photoshop').app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require('photoshop').action;
-const { handleError } = require('./lib/errorHandler');
-const { Logger } = require('./lib/logger');
 const { showAlert } = require('./lib/lib');
 const { createDocCopyLayers, docResizeOptions } = require('./lib/lib_doc');
 const { createMaskFromSelection } = require('./lib/lib_channel');
@@ -19,7 +17,6 @@ const {
 const { getWorkPath, makeWorkPath } = require('./lib/lib_shape');
 const { executeModalWithHistoryGrouping } = require('./lib/lib');
 const { deselectAll, selectionAreaTransparency, selectionExpand, setBoundsRegion } = require('./lib/lib_select');
-const logger = new Logger('SplitToLayers');
 
 /**
  * 레이어를 알파 채널 기준으로 분할하는 메인 함수 (Bounds 기반 방식)
@@ -54,7 +51,7 @@ async function splitToLayers() {
         );
 
     } catch (error) {
-        await handleError(error, 'split_to_layers');
+        console.log(error);
     }
 }
 
@@ -93,7 +90,7 @@ async function splitOperationBounds(baseLayer, config) {
         baseLayer.visible = false;
         
     } catch (error) {
-        logger.error('Split operation failed:', error);
+        console.log('split 명령 실패 :', error);
         throw error;
     }
 }
@@ -283,7 +280,7 @@ async function createLayersFromBounds(baseLayer, regionBounds, config) {
                 successCount++;
             }
         } catch (error) {
-            logger.error(`Failed to create layer ${i + 1}`, error);
+            console.log(`layer ${i + 1} 생성 실패 :`, error);
             // 에러가 발생해도 계속 진행
         }
     }
@@ -293,16 +290,15 @@ async function createLayersFromBounds(baseLayer, regionBounds, config) {
         try {
             const batchCommands = createLayerRenameCommands(layerNamePairs);
             await batchPlay(batchCommands, {});
-            logger.info(`Batch renamed ${layerNamePairs.length} layers`);
         } catch (error) {
-            logger.error('Failed to batch rename layers:', error);
+            console.log('rename layers 배치 실패 :', error);
             // 개별적으로 이름 변경 시도
             for (const { layerID, newName } of layerNamePairs) {
                 try {
                     await selectByLayerID(layerID);
                     await setLayerName(newName);
                 } catch (renameError) {
-                    logger.error(`Failed to rename layer ${layerID}:`, renameError);
+                    console.log(`${layerID} 실패:`, renameError);
                 }
             }
         }
@@ -321,7 +317,7 @@ async function createLayerFromBounds(baseLayer, bounds, config, layerIndex) {
         // 2. bounds 영역 선택
         await setBoundsRegion("rectangle", bounds);
         if (!app.activeDocument.selection.bounds) {
-            logger.warn(`No selection found for bounds at (${bounds.x}, ${bounds.y})`);
+            console.log(`bounds (${bounds.x}, ${bounds.y}) 선택 영역이 없습니다.`);
             return null;
         }
 
@@ -336,7 +332,7 @@ async function createLayerFromBounds(baseLayer, bounds, config, layerIndex) {
         return activeLayer ? activeLayer.id : null;
         
     } catch (error) {
-        logger.error(`Failed to create layer from bounds at (${bounds.x}, ${bounds.y})`, error);
+        console.log(`Failed to create layer from bounds at (${bounds.x}, ${bounds.y})`, error);
         await deselectAll();
         throw error;
     }

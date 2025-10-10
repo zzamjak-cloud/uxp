@@ -1,5 +1,4 @@
 const { batchPlay } = require("photoshop").action;
-const { TEXT_ALIGNMENT, TEXT_ORIENTATION } = require('./constants');
 
 /**
  * 텍스트 레이어 생성
@@ -36,7 +35,7 @@ async function createTextLayer(text, x = 0, y = 0, fontName = "Arial-BoldMT", fo
                     warpPerspectiveOther: 0,
                     warpRotate: {
                         _enum: "orientation",
-                        _value: TEXT_ORIENTATION.HORIZONTAL
+                        _value: "horizontal"
                     }
                 },
                 textShape: [
@@ -48,7 +47,7 @@ async function createTextLayer(text, x = 0, y = 0, fontName = "Arial-BoldMT", fo
                         },
                         orientation: {
                             _enum: "orientation",
-                            _value: TEXT_ORIENTATION.HORIZONTAL
+                            _value: "horizontal"
                         },
                         transform: {
                             _obj: "transform",

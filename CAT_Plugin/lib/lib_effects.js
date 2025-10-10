@@ -2,13 +2,12 @@
 // 레이어 이펙트 관리 - 범용적인 Layer Style 적용
 
 const { batchPlay } = require("photoshop").action;
-const constants = require("./constants");
 
 /**
  * 범용적인 Layer Style 적용 함수
  * @param {string} layerID - 레이어 ID
  * @param {Object} styleConfig - 스타일 설정 객체
- * @param {string} styleType - 스타일 타입 (constants.LAYER_STYLE 참조)
+ * @param {string} styleType - 스타일 타입 (constants.LAYER.STYLE 참조)
  * @returns {Promise<boolean>} - 성공 여부
  */
 async function applyLayerStyle(layerID, styleConfig, styleType) {
@@ -61,42 +60,42 @@ function buildStyleData(styleType, config) {
     };
 
     switch (styleType) {
-        case constants.LAYER_STYLE.STROKE:
+        case 'frameFX':
             return {
                 ...baseData,
                 "frameFX": buildStrokeData(config)
             };
-        case constants.LAYER_STYLE.DROP_SHADOW:
+        case "dropShadow":
             return {
                 ...baseData,
                 "dropShadow": buildDropShadowData(config)
             };
-        case constants.LAYER_STYLE.INNER_SHADOW:
+        case "innerShadow":
             return {
                 ...baseData,
                 "innerShadow": buildInnerShadowData(config)
             };
-        case constants.LAYER_STYLE.OUTER_GLOW:
+        case "outerGlow":
             return {
                 ...baseData,
                 "outerGlow": buildOuterGlowData(config)
             };
-        case constants.LAYER_STYLE.INNER_GLOW:
+        case "innerGlow":
             return {
                 ...baseData,
                 "innerGlow": buildInnerGlowData(config)
             };
-        case constants.LAYER_STYLE.BEVEL_EMBOSS:
+        case "bevelEmboss":
             return {
                 ...baseData,
                 "bevelEmboss": buildBevelEmbossData(config)
             };
-        case constants.LAYER_STYLE.COLOR_OVERLAY:
+        case "colorOverlay":
             return {
                 ...baseData,
                 "colorOverlay": buildColorOverlayData(config)
             };
-        case constants.LAYER_STYLE.GRADIENT_OVERLAY:
+        case "gradientFill":
             return {
                 ...baseData,
                 "gradientFill": buildGradientOverlayData(config)
@@ -115,11 +114,11 @@ function buildStrokeData(config) {
     const {
         enabled = true,
         size = 3,
-        position = constants.LAYER_STYLE_CONFIG.STROKE.STYLE.OUTSET,
-        fillType = constants.LAYER_STYLE_CONFIG.STROKE.FILL_TYPE.SOLID_COLOR,
+        position = 'outsetFrame',
+        fillType = 'solidColor',
         color = { red: 0, green: 0, blue: 0 },
         opacity = 100,
-        blendMode = constants.LAYER.BLEND_MODES.NORMAL
+        blendMode = 'normal'
     } = config;
 
     return {
@@ -165,7 +164,7 @@ function buildStrokeData(config) {
 function buildDropShadowData(config) {
     const {
         enabled = true,
-        blendMode = constants.LAYER_STYLE_CONFIG.DROP_SHADOW.BLEND_MODE.MULTIPLY,
+        blendMode = "multiply",
         color = { red: 0, green: 0, blue: 0 },
         opacity = 75,
         angle = 120,
@@ -225,7 +224,7 @@ function buildDropShadowData(config) {
 function buildInnerShadowData(config) {
     const {
         enabled = true,
-        blendMode = constants.LAYER_STYLE_CONFIG.INNER_SHADOW.BLEND_MODE.MULTIPLY,
+        blendMode = "multiply",
         color = { red: 0, green: 0, blue: 0 },
         opacity = 75,
         angle = 120,
@@ -285,10 +284,10 @@ function buildInnerShadowData(config) {
 function buildOuterGlowData(config) {
     const {
         enabled = true,
-        blendMode = constants.LAYER.BLEND_MODES.SCREEN,
+        blendMode = "screen",
         color = { red: 255, green: 255, blue: 0 },
         opacity = 75,
-        technique = constants.LAYER_STYLE_CONFIG.GLOW.TECHNIQUE.SOFTER,
+        technique = "softer",
         spread = 0,
         size = 10,
         range = 50,
@@ -345,11 +344,11 @@ function buildOuterGlowData(config) {
 function buildInnerGlowData(config) {
     const {
         enabled = true,
-        blendMode = constants.LAYER.BLEND_MODES.SCREEN,
+        blendMode = "screen",
         color = { red: 255, green: 255, blue: 0 },
         opacity = 75,
-        technique = constants.LAYER_STYLE_CONFIG.GLOW.TECHNIQUE.SOFTER,
-        source = constants.LAYER_STYLE_CONFIG.GLOW.SOURCE.EDGE,
+        technique = "softer",
+        source = "edge",
         choke = 0,
         size = 10,
         range = 50,
@@ -410,17 +409,17 @@ function buildInnerGlowData(config) {
 function buildBevelEmbossData(config) {
     const {
         enabled = true,
-        style = constants.LAYER_STYLE_CONFIG.BEVEL_EMBOSS.STYLE.OUTER_BEVEL,
-        technique = constants.LAYER_STYLE_CONFIG.BEVEL_EMBOSS.TECHNIQUE.SMOOTH,
+        style = "outerBevel",
+        technique = "smooth",
         depth = 100,
         direction = "up",
         size = 5,
         soften = 0,
         angle = 120,
         altitude = 30,
-        highlightMode = constants.LAYER.BLEND_MODES.SCREEN,
+        highlightMode = "screen",
         highlightOpacity = 75,
-        shadowMode = constants.LAYER.BLEND_MODES.MULTIPLY,
+        shadowMode = "multiply",
         shadowOpacity = 75
     } = config;
 
@@ -488,7 +487,7 @@ function buildBevelEmbossData(config) {
 function buildColorOverlayData(config) {
     const {
         enabled = true,
-        blendMode = constants.LAYER.BLEND_MODES.NORMAL,
+        blendMode = "normal",
         color = { red: 255, green: 0, blue: 0 },
         opacity = 100
     } = config;
@@ -523,7 +522,7 @@ function buildColorOverlayData(config) {
 function buildGradientOverlayData(config) {
     const {
         enabled = true,
-        blendMode = constants.LAYER.BLEND_MODES.NORMAL,
+        blendMode = "normal",
         opacity = 100,
         gradient = "Foreground to Background",
         style = "linear",
@@ -578,12 +577,12 @@ async function applyStroke(layerID, strokeConfig = {}) {
         size: 3,
         color: { red: 0, green: 0, blue: 0 },
         opacity: 100,
-        position: constants.LAYER_STYLE_CONFIG.STROKE.STYLE.OUTSET,
-        fillType: constants.LAYER_STYLE_CONFIG.STROKE.FILL_TYPE.SOLID_COLOR,
-        blendMode: constants.LAYER.BLEND_MODES.NORMAL
+        position: "outsetFrame",
+        fillType: "solidColor",
+        blendMode: "normal"
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...strokeConfig }, constants.LAYER_STYLE.STROKE);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...strokeConfig }, "frameFX");
 }
 
 /**
@@ -599,10 +598,10 @@ async function applyDropShadow(layerID, shadowConfig = {}) {
         color: { red: 0, green: 0, blue: 0 },
         opacity: 75,
         angle: 120,
-        blendMode: constants.LAYER_STYLE_CONFIG.DROP_SHADOW.BLEND_MODE.MULTIPLY
+        blendMode: "multiply"
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...shadowConfig }, constants.LAYER_STYLE.DROP_SHADOW);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...shadowConfig }, "dropShadow");
 }
 
 /**
@@ -618,10 +617,10 @@ async function applyInnerShadow(layerID, shadowConfig = {}) {
         color: { red: 0, green: 0, blue: 0 },
         opacity: 75,
         angle: 120,
-        blendMode: constants.LAYER_STYLE_CONFIG.INNER_SHADOW.BLEND_MODE.MULTIPLY
+        blendMode: "multiply"
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...shadowConfig }, constants.LAYER_STYLE.INNER_SHADOW);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...shadowConfig }, "innerShadow");
 }
 
 /**
@@ -635,11 +634,11 @@ async function applyOuterGlow(layerID, glowConfig = {}) {
         size: 10,
         color: { red: 255, green: 255, blue: 0 },
         opacity: 75,
-        blendMode: constants.LAYER.BLEND_MODES.SCREEN,
-        technique: constants.LAYER_STYLE_CONFIG.GLOW.TECHNIQUE.SOFTER
+        blendMode: "screen",
+        technique: "softer"
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...glowConfig }, constants.LAYER_STYLE.OUTER_GLOW);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...glowConfig }, "outerGlow");
 }
 
 /**
@@ -653,12 +652,12 @@ async function applyInnerGlow(layerID, glowConfig = {}) {
         size: 10,
         color: { red: 255, green: 255, blue: 0 },
         opacity: 75,
-        blendMode: constants.LAYER.BLEND_MODES.SCREEN,
-        technique: constants.LAYER_STYLE_CONFIG.GLOW.TECHNIQUE.SOFTER,
-        source: constants.LAYER_STYLE_CONFIG.GLOW.SOURCE.EDGE
+        blendMode: "screen",
+        technique: "softer",
+        source: "edge"
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...glowConfig }, constants.LAYER_STYLE.INNER_GLOW);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...glowConfig }, "innerGlow");
 }
 
 /**
@@ -669,15 +668,15 @@ async function applyInnerGlow(layerID, glowConfig = {}) {
  */
 async function applyBevelEmboss(layerID, bevelConfig = {}) {
     const defaultConfig = {
-        style: constants.LAYER_STYLE_CONFIG.BEVEL_EMBOSS.STYLE.OUTER_BEVEL,
-        technique: constants.LAYER_STYLE_CONFIG.BEVEL_EMBOSS.TECHNIQUE.SMOOTH,
+        style: "outerBevel",
+        technique: "smooth",
         depth: 100,
         size: 5,
         angle: 120,
         altitude: 30
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...bevelConfig }, constants.LAYER_STYLE.BEVEL_EMBOSS);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...bevelConfig }, "bevelEmboss");
 }
 
 /**
@@ -690,10 +689,10 @@ async function applyColorOverlay(layerID, overlayConfig = {}) {
     const defaultConfig = {
         color: { red: 255, green: 0, blue: 0 },
         opacity: 100,
-        blendMode: constants.LAYER.BLEND_MODES.NORMAL
+        blendMode: "normal"
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...overlayConfig }, constants.LAYER_STYLE.COLOR_OVERLAY);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...overlayConfig }, "colorOverlay");
 }
 
 /**
@@ -705,14 +704,14 @@ async function applyColorOverlay(layerID, overlayConfig = {}) {
 async function applyGradientOverlay(layerID, gradientConfig = {}) {
     const defaultConfig = {
         opacity: 100,
-        blendMode: constants.LAYER.BLEND_MODES.NORMAL,
+        blendMode: "normal",
         gradient: "Foreground to Background",
         style: "linear",
         angle: 90,
         scale: 100
     };
 
-    return await applyLayerStyle(layerID, { ...defaultConfig, ...gradientConfig }, constants.LAYER_STYLE.GRADIENT_OVERLAY);
+    return await applyLayerStyle(layerID, { ...defaultConfig, ...gradientConfig }, "gradientFill");
 }
 
 /**
@@ -732,6 +731,38 @@ async function applyMultipleStyles(layerID, styles) {
         return true;
     } catch (error) {
         console.error("여러 스타일 적용 실패:", error);
+        return false;
+    }
+}
+
+/**
+ * layerEffects를 직접 설정하는 함수
+ * @param {Object} layerEffects - 설정할 layerEffects 객체
+ * @param {number} layerId - 레이어 ID
+ * @returns {Promise<boolean>} - 성공 여부
+ */
+async function setLayerEffects(layerEffects, layerId) {
+    try {
+        await batchPlay(
+            [{
+                _obj: "set",
+                _target: [{
+                    _ref: "property",
+                    _property: "layerEffects"
+                }, {
+                    _ref: "layer",
+                    _id: layerId
+                }],
+                to: layerEffects,
+                _options: {
+                    dialogOptions: "dontDisplay"
+                }
+            }],
+            { synchronousExecution: true }
+        );
+        return true;
+    } catch (error) {
+        console.error("layerEffects 설정 실패:", error);
         return false;
     }
 }
@@ -874,6 +905,7 @@ module.exports = {
     applyLayerStyle,
     applyMultipleStyles,
     removeLayerStyle,
+    setLayerEffects,
     
     // 복사/붙여넣기 함수들
     copyLayerStyle,

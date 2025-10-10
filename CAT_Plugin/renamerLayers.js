@@ -1,5 +1,4 @@
 const app = require("photoshop").app;
-const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { 
     selectByLayerID, 
@@ -7,11 +6,7 @@ const {
     createLayerRenameCommands 
     } = require("./lib/lib_layer");
 const { executeModalWithHistoryGrouping } = require("./lib/lib");
-const { handleError } = require("./lib/errorHandler");
-const { Logger } = require("./lib/logger");
 const { showAlert } = require("./lib/lib");
-
-const logger = new Logger('LayerRenamer');
 
 // 프리셋 관리 클래스
 class PresetManager {
@@ -27,7 +22,7 @@ class PresetManager {
             const stored = localStorage.getItem(this.storageKey);
             return stored ? JSON.parse(stored) : [];
         } catch (error) {
-            logger.error(`Failed to load presets: ${error.message}`);
+            console.log(`프리셋 로드 실패 : ${error.message}`);
             return [];
         }
     }
@@ -36,9 +31,8 @@ class PresetManager {
     savePresets() {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(this.presets));
-            logger.info(`Saved ${this.presets.length} presets`);
         } catch (error) {
-            logger.error(`Failed to save presets: ${error.message}`);
+            console.log(`프리셋 저장 실패 : ${error.message}`);
         }
     }
 
@@ -59,7 +53,6 @@ class PresetManager {
 
         this.presets.push(trimmedText);
         this.savePresets();
-        logger.info(`Added preset: ${trimmedText}`);
     }
 
     // 프리셋 제거
@@ -68,7 +61,6 @@ class PresetManager {
         if (index > -1) {
             this.presets.splice(index, 1);
             this.savePresets();
-            logger.info(`Removed preset: ${text}`);
         }
     }
 
@@ -106,7 +98,6 @@ function createPresetItem(text) {
         const renameTextField = document.getElementById('renameText');
         if (renameTextField) {
             renameTextField.value = text;
-            logger.info(`Applied preset: ${text}`);
         }
     });
 
@@ -118,7 +109,6 @@ function createPresetItem(text) {
     removeButton.addEventListener('click', () => {
         presetManager.removePreset(text);
         presetItem.remove();
-        logger.info(`Removed preset: ${text}`);
     });
 
     presetItem.appendChild(textDisplay);
@@ -161,18 +151,12 @@ async function addNewPreset() {
         presetManager.addPreset(text);
         renderPresets();
         
-        // 성공 메시지 (선택사항)
-        logger.info(`프리셋이 추가되었습니다: ${text}`);
-        
         // 성공 시 텍스트 필드 초기화 및 포커스
         renameTextField.value = '';
         renameTextField.placeholder = 'Enter Text';
         renameTextField.focus();
         
     } catch (error) {
-        logger.error(`Failed to add preset: ${error.message}`);
-        console.error(`프리셋 추가 실패: ${error.message}`);
-        
         // showAlert를 사용하여 에러 메시지 표시
         await showAlert(error.message);
         
@@ -290,8 +274,6 @@ async function restoreOriginalSelection(originalLayerIDs) {
         if (originalLayerIDs.length === 0) {
             return;
         }
-
-        logger.info(`Restoring selection for ${originalLayerIDs.length} layers`);
         
         // 첫 번째 레이어 선택
         await selectByLayerID(originalLayerIDs[0]);
@@ -301,13 +283,11 @@ async function restoreOriginalSelection(originalLayerIDs) {
             try {
                 await addSelectLayerIndividual(originalLayerIDs[i]);
             } catch (error) {
-                logger.warn(`Failed to add layer ${originalLayerIDs[i]} to selection: ${error.message}`);
+                console.log(`Failed to add layer ${originalLayerIDs[i]} to selection: ${error.message}`);
             }
         }
-        
-        logger.info(`Selection restored: ${originalLayerIDs.length} layers`);
     } catch (error) {
-        logger.error(`Failed to restore original selection: ${error.message}`);
+        console.log(`원래 선택 상태 복원 실패 : ${error.message}`);
     }
 }
 
@@ -329,7 +309,6 @@ async function renamerLayers(type) {
 
         // 처음 선택된 레이어들의 ID를 저장
         const originalLayerIDs = actLays.map(layer => layer.id);
-        logger.info(`Original selection saved: ${originalLayerIDs.length} layers`);
 
         let processedCount = 0;
         const totalLayers = actLays.length;
@@ -337,9 +316,6 @@ async function renamerLayers(type) {
         // 새로운 범용 히스토리 그룹핑 함수 사용
         await executeModalWithHistoryGrouping(
             async (context) => {
-                logger.info(`Starting rename operation: ${type}`);
-                logger.info(`Processing ${totalLayers} layers`);
-
                 // 모든 레이어의 새 이름을 미리 계산
                 const layerNamePairs = [];
                 for (const [index, layer] of actLays.entries()) {
@@ -348,14 +324,12 @@ async function renamerLayers(type) {
                         layerID: layer.id,
                         newName: newName
                     });
-                    logger.info(`Prepared rename: ${layer.name} → ${newName}`);
                 }
 
                 // 히스토리 그룹핑과 함께 레이어 이름 변경
                 const batchCommands = createLayerRenameCommands(layerNamePairs);
                 await batchPlay(batchCommands, {});
                 processedCount = totalLayers;
-                logger.info('Rename operation completed successfully');
                 
                 // 원래 선택 상태 복원
                 await restoreOriginalSelection(originalLayerIDs);
@@ -365,7 +339,7 @@ async function renamerLayers(type) {
         );
 
     } catch (error) {
-        await handleError(error, 'layer_renamer');
+        console.log(error);
     }
 }
 

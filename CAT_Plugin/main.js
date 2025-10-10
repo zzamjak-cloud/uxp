@@ -3,7 +3,6 @@ const app = require("photoshop").app;
 const fs = require('uxp').storage.localFileSystem;
 
 // 사용자 정의 모듈
-const { showAlert } = require("./lib/lib");
 const { speedSave } = require("./exportSpeedSave");
 const { exportSelectedFile, setupFolderPresetEventListeners } = require("./exportSelectedLayers");
 const { savePngAndLinkToPSD } = require("./exportSelectedAndLink");

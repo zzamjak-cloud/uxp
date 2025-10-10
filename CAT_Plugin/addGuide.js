@@ -2,12 +2,14 @@ const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
 const { batchPlay } = require("photoshop").action;
 const { makeGuide, clearAllGuides } = require('./lib/lib_guide');
-const { selectNoLays, selectByLayerID, addSelectLayer, makeGroupFromSelectLayers, deleteLayerByName, mergeLayers} = require('./lib/lib_layer');
-const { handleError } = require('./lib/errorHandler');
-const constants = require('./lib/constants');
-const { Logger } = require('./lib/logger');
-
-const logger = new Logger('AddGuide');
+const { 
+    selectNoLays, 
+    selectByLayerID, 
+    addSelectLayer, 
+    makeGroupFromSelectLayers, 
+    deleteLayerByName, 
+    mergeLayers
+} = require('./lib/lib_layer');
 
 // 모든 가이드 추가
 async function addAllGuides() {
@@ -21,14 +23,14 @@ async function addAllGuides() {
             const sectionHeight = doc.height / rows;
             for (let i = 1; i < rows; i++) {
                 const position = sectionHeight * i;
-                await makeGuide(position, constants.GUIDE.ORIENTATIONS.HORIZONTAL);
+                await makeGuide(position, 'horizontal');
             }
             
             // 수직 가이드 생성 (열)
             const sectionWidth = doc.width / cols;
             for (let i = 1; i < cols; i++) {
                 const position = sectionWidth * i;
-                await makeGuide(position, constants.GUIDE.ORIENTATIONS.VERTICAL);
+                await makeGuide(position, 'vertical');
             }
             
             // Num 생성 여부 확인
@@ -46,14 +48,14 @@ async function addAllGuides() {
             }
             
             if (generateNumbers) {
-                logger.info(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
+                console.log(`Created ${textLayerIds.length} grid number texts in ${rows}x${cols} grid`);
             } else {
-                logger.info(`Created guides only (numbers disabled) in ${rows}x${cols} grid`);
+                console.log(`Created guides only (numbers disabled) in ${rows}x${cols} grid`);
             }
             
         }, { commandName: 'Add All Guides' });
     } catch (error) {
-        console.error('Error adding all guides:', error);
+        console.log('Error adding all guides:', error);
     }
 }
 // 배치 처리로 텍스트 레이어들을 생성하는 함수 (return : textLayerIds)
@@ -171,7 +173,7 @@ async function createTextLayersBatch(rows, cols, sectionWidth, sectionHeight) {
         return textLayerIds;
         
     } catch (error) {
-        logger.error('Failed to create text layers in batch:', error);
+        console.log('Failed to create text layers in batch:', error);
         return [];
     }
 }
@@ -198,7 +200,7 @@ async function createGroupFromLayers(layerIds, groupName) {
                 selectedCount++;
 
             } catch (selectError) {
-                logger.warn(`Failed to select layer ${layerId}: ${selectError.message}`);
+                console.log(`Failed to select layer ${layerId}: ${selectError.message}`);
             }
         }
         
@@ -206,11 +208,11 @@ async function createGroupFromLayers(layerIds, groupName) {
         if (selectedCount > 0) {
             await makeGroupFromSelectLayers(groupName);
         } else {
-            logger.warn(`No layers were selected for group "${groupName}"`);
+            console.log(`No layers were selected for group "${groupName}"`);
         }
         
     } catch (error) {
-        logger.error(`Failed to create group "${groupName}":`, error);
+        console.log(`Failed to create group "${groupName}":`, error);
     }
 }
 
@@ -224,7 +226,7 @@ async function clearGuides() {
             
         }, { commandName: 'Clear Guides' });
     } catch (error) {
-        await handleError(error, 'clear_guides');
+        console.log(error);
     }
 }
 

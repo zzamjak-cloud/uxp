@@ -1,9 +1,8 @@
 const app = require("photoshop").app;
 const { executeAsModal } = require('photoshop').core;
-const { batchPlay } = require("photoshop").action;
 const { selectNoLays, selectByLayerID, getLayerInfo } = require("./lib/lib_layer");
-const { handleError } = require("./lib/errorHandler");
 const { showAlert } = require("./lib/lib");
+const { setLayerEffects } = require("./lib/lib_effects");
 
 /**
  * 모든 이펙트를 제거한 후 활성화된 이펙트들만 다시 적용하는 함수
@@ -46,41 +45,16 @@ async function clearLayerStyleAndReapplyEnabled(layerEffects, effectKeys, layerI
         }
         
         // 2. 새로운 layerEffects로 설정
-        await setLayerEffects(newLayerEffects, layerId);
+        const success = await setLayerEffects(newLayerEffects, layerId);
+        if (!success) {
+            throw new Error("layerEffects 설정에 실패했습니다.");
+        }
         
     } catch (error) {
         throw error;
     }
 }
 
-/**
- * layerEffects를 설정하는 함수 (포토샵 리스너 방식)
- * @param {Object} layerEffects - 설정할 layerEffects 객체
- * @param {number} layerId - 레이어 ID
- */
-async function setLayerEffects(layerEffects, layerId) {
-    try {
-        await batchPlay(
-            [{
-                _obj: "set",
-                _target: [{
-                    _ref: "property",
-                    _property: "layerEffects"
-                }, {
-                    _ref: "layer",
-                    _id: layerId
-                }],
-                to: layerEffects,
-                _options: {
-                    dialogOptions: "dontDisplay"
-                }
-            }],
-            { synchronousExecution: true }
-        );
-    } catch (error) {
-        throw error;
-    }
-}
 
 
 /**
@@ -189,7 +163,7 @@ async function clearHiddenEffects() {
 
         }, { commandName: "Clear Hidden Effects" });
     } catch (error) {
-        await handleError(error, 'clear_hidden_effects');
+        console.log(error);
     }
 }
 

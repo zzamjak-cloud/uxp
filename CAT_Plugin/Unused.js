@@ -1,6 +1,5 @@
 
 const { actionCommands } = require("./lib/lib_layer");
-const { COMMAND } = require('./lib/constants');
 
 // 향상된 선택 레이어 PNG 내보내기 (미사용)
 async function exportOnlySelectedLayers() {
@@ -21,9 +20,6 @@ async function exportOnlySelectedLayers() {
         // 체크박스 상태 확인 (문서 크기 유지 옵션)
         const maintainDocSizeCheckbox = document.getElementById('maintainDocSize');
         const maintainDocumentSize = maintainDocSizeCheckbox ? maintainDocSizeCheckbox.checked : false;
-
-        logger.info(`Processing ${selectedLayers.length} selected layers`);
-        logger.info(`Maintain document size: ${maintainDocumentSize}`);
 
         let successCount = 0;
         let failCount = 0;
@@ -62,7 +58,6 @@ async function exportOnlySelectedLayers() {
                     await docCloseWithoutSaving(newDoc);
                     
                     successCount++;
-                    logger.info(`Exported: ${fileName} ${maintainDocumentSize ? '(document size)' : '(trimmed)'}`);
                     
                 } catch (layerError) {
                     failCount++;
@@ -89,15 +84,13 @@ async function exportOnlySelectedLayers() {
         const sizeMode = maintainDocumentSize ? "문서 크기 유지" : "레이어 크기 맞춤";
         
         if (failCount > 0) {
-            logger.warn(`Export completed with errors: ${successCount}/${totalLayers} successful`);
             await showAlert(`PNG 내보내기 완료! (${sizeMode})\n성공: ${successCount}개\n실패: ${failCount}개`);
         } else {
-            logger.info(`Export completed successfully: ${successCount}/${totalLayers}`);
             await showAlert(`모든 레이어 PNG 내보내기 완료! (${sizeMode})\n총 ${successCount}개 파일 생성`);
         }
 
     } catch (error) {
-        await handleError(error, 'export_selected_layers');
+        console.log(error);
     }
 }
 
@@ -116,7 +109,7 @@ async function exportGroupLayerToPNG(groupLayer, folder, folderToken, maintainDo
         
         // 모든 레이어를 하나로 합치기 (그룹의 모든 내용을 하나의 이미지로)
         if (newDoc.layers.length > 1) {
-            await actionCommands(COMMAND.MERGE_VISIBLE);
+            await actionCommands('mergeVisible');
         }
         
         // 문서 크기 유지 옵션에 따른 처리
@@ -214,15 +207,13 @@ async function exportLayersAsDocSize() {
                 await layerVisible("show", layer.name);
                 await saveForWebPNG(fileEntry.name, folderToken, fileToken);
                 await layerVisible("hide", layer.name);
-
-                logger.info(`Exported: ${fileName}`);
             }
         });
 
-        logger.info('Export completed successfully');
+        console.log('Export completed successfully');
 
     } catch (error) {
-        await handleError(error, 'export_png');
+        console.log(error);
     }
 }
 
@@ -250,13 +241,11 @@ async function exportLayersFromImportPSD() {
             throw new Error('선택한 폴더에 PSD 파일이 없습니다.');
         }
 
-        logger.info(`Found ${psdFiles.length} PSD files`);
         const folderToken = await fs.createSessionToken(resourceFolder);
 
         // 각 PSD 파일 처리
         for (const psdFile of psdFiles) {
             await executeAsModal(async () => {
-                logger.info(`Processing: ${psdFile.name}`);
 
                 // PSD 파일 열기
                 const doc = await app.open(psdFile);
@@ -277,8 +266,6 @@ async function exportLayersFromImportPSD() {
                     await layerVisible("show", layer.name);
                     await saveForWebPNG(fileEntry.name, folderToken, fileToken);
                     await layerVisible("hide", layer.name);
-
-                    logger.info(`Exported: ${fileName}`);
                 }
 
                 // 문서 닫기
@@ -286,9 +273,9 @@ async function exportLayersFromImportPSD() {
             });
         }
 
-        logger.info('All PSD files processed successfully');
+        console.log('All PSD files processed successfully');
 
     } catch (error) {
-        await handleError(error, 'export_from_psd');
+        console.log(error);
     }
 }
