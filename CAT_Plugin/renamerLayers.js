@@ -7,76 +7,10 @@ const {
     } = require("./lib/lib_layer");
 const { executeModalWithHistoryGrouping } = require("./lib/lib");
 const { showAlert } = require("./lib/lib");
-
-// 프리셋 관리 클래스
-class PresetManager {
-    constructor() {
-        this.storageKey = 'layerRenamerPresets';
-        this.maxPresets = 6;
-        this.presets = this.loadPresets();
-    }
-
-    // 로컬 스토리지에서 프리셋 로드
-    loadPresets() {
-        try {
-            const stored = localStorage.getItem(this.storageKey);
-            return stored ? JSON.parse(stored) : [];
-        } catch (error) {
-            console.log(`프리셋 로드 실패 : ${error.message}`);
-            return [];
-        }
-    }
-
-    // 로컬 스토리지에 프리셋 저장
-    savePresets() {
-        try {
-            localStorage.setItem(this.storageKey, JSON.stringify(this.presets));
-        } catch (error) {
-            console.log(`프리셋 저장 실패 : ${error.message}`);
-        }
-    }
-
-    // 프리셋 추가
-    addPreset(text) {
-        if (this.presets.length >= this.maxPresets) {
-            throw new Error(`최대 ${this.maxPresets}개의 프리셋만 추가할 수 있습니다.`);
-        }
-        
-        if (!text || text.trim() === '') {
-            throw new Error('프리셋 텍스트를 입력해주세요.');
-        }
-
-        const trimmedText = text.trim();
-        if (this.presets.includes(trimmedText)) {
-            throw new Error('이미 존재하는 프리셋입니다.');
-        }
-
-        this.presets.push(trimmedText);
-        this.savePresets();
-    }
-
-    // 프리셋 제거
-    removePreset(text) {
-        const index = this.presets.indexOf(text);
-        if (index > -1) {
-            this.presets.splice(index, 1);
-            this.savePresets();
-        }
-    }
-
-    // 모든 프리셋 가져오기
-    getAllPresets() {
-        return [...this.presets];
-    }
-
-    // 프리셋 존재 여부 확인
-    hasPreset(text) {
-        return this.presets.includes(text);
-    }
-}
+const { TextPresetManager } = require("./lib/lib_text_preset");
 
 // 전역 프리셋 매니저 인스턴스
-const presetManager = new PresetManager();
+const presetManager = new TextPresetManager('layerRenamerPresets');
 
 // 프리셋 UI 관리 함수들
 function createPresetItem(text) {
@@ -345,7 +279,5 @@ async function renamerLayers(type) {
 
 module.exports = {
     renamerLayers,
-    setupPresetEventListeners,
-    renderPresets,
-    presetManager
+    setupPresetEventListeners
 };
