@@ -69,9 +69,6 @@ async function exportMarketScreenshot() {
                 await layerVisible("hide", countryCode);
             }, { commandName: `Export ${countryCode}` });
         }
-        
-        await showAlert(`Successfully exported ${countryLayers.length} market screenshots!`);
-        
     } catch (error) {
         console.error("Error in exportMarketScreenshot:", error);
         await showAlert(`Error: ${error.message}`);

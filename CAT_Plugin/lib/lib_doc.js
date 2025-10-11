@@ -68,27 +68,25 @@ async function docResizeCanvas(doc, size) {
 }
 
 // Image 크기 조정 (옵션 설정)
-// unitValue : 'pixelsUnit', 'percentUnit'
-// interpolationValue : 'nearestNeighbor', 'bicubicSharper', 'bicubic'
 async function docResizeOptions(doc, width, height, unitValue = 'pixelsUnit', interpolationValue = 'nearestNeighbor') {
    await batchPlay(
        [{
            _obj: "imageSize",
            constrainProportions: true,
            width: {
-               _unit: unitValue,
-               _value: width
+               _unit: unitValue,    // 'pixelsUnit', 'percentUnit'
+               _value: width        // 100, 100%
            },
            height: {
-               _unit: unitValue,
-               _value: height
+               _unit: unitValue,    // 'pixelsUnit', 'percentUnit'
+               _value: height       // 100, 100%
            },
            interfaceIconFrameDimmed: false,
            scaleStyles: true,
            useHistogram: false,
            interpolation: {
                _enum: "interpolationType",
-               _value: interpolationValue
+               _value: interpolationValue  // 'nearestNeighbor', 'bicubicSharper', 'bicubic', ...
            }
        }],
        { synchronousExecution: true }
@@ -101,12 +99,14 @@ async function docCloseWithoutSaving(doc) {
 }
 
 // 레이어 보이기/숨기기
-// show_hide : "show", "hide"
 async function layerVisible(show_hide, name) {
     await batchPlay(
        [{
-          _obj: show_hide,
-          null: [{_ref: "layer", _name: name}],
+            _obj: show_hide,    // "show", "hide"
+            null: [{
+                _ref: "layer", 
+                _name: name     // 레이어 이름
+            }],
           _options: {dialogOptions: "dontDisplay"}
        }], {}
     );
@@ -115,20 +115,11 @@ async function layerVisible(show_hide, name) {
 // 이전 문서 선택
 async function selectPrevDoc() {
     const result = await batchPlay(
-       [
-          {
-             _obj: "select",
-             _target: [
-                {
-                   _ref: "document",
-                   _offset: -1
-                }
-             ],
-             _options: {
-                dialogOptions: "dontDisplay"
-             }
-          }
-       ],
+        [{
+            _obj: "select",
+            _target: [{ _ref: "document", _offset: -1 }],
+            _options: { dialogOptions: "dontDisplay" }
+        }],
        {}
     );
  }

@@ -92,7 +92,7 @@ function createPresetItem(text) {
     // 선택 버튼 (V 표시)
     const selectButton = document.createElement('sp-action-button');
     selectButton.className = 'preset-select';
-    selectButton.textContent = '✓';
+    selectButton.textContent = 'v';
     selectButton.title = '선택';
     selectButton.addEventListener('click', () => {
         const renameTextField = document.getElementById('renameText');
@@ -104,7 +104,7 @@ function createPresetItem(text) {
     // 제거 버튼
     const removeButton = document.createElement('sp-action-button');
     removeButton.className = 'preset-remove';
-    removeButton.textContent = '×';
+    removeButton.textContent = 'x';
     removeButton.title = '제거';
     removeButton.addEventListener('click', () => {
         presetManager.removePreset(text);

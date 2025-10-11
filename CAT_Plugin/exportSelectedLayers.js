@@ -21,7 +21,7 @@ class FolderPresetManager {
             const stored = localStorage.getItem(this.storageKey);
             return stored ? JSON.parse(stored) : [];
         } catch (error) {
-            console.log(`${error.message}`);
+            console.log(`프리셋 로드 실패 : ${error.message}`);
             return [];
         }
     }
@@ -30,9 +30,8 @@ class FolderPresetManager {
     savePresets() {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(this.presets));
-            console.log(`Saved ${this.presets.length} folder presets`);
         } catch (error) {
-            console.log(`Failed to save folder presets: ${error.message}`);
+            console.log(`프리셋 저장 실패 : ${error.message}`);
         }
     }
 
@@ -59,7 +58,6 @@ class FolderPresetManager {
 
         this.presets.push(preset);
         this.savePresets();
-        console.log(`폴더 프리셋 추가 : ${folderName} (${folderPath})`);
         return preset;
     }
 
@@ -69,7 +67,6 @@ class FolderPresetManager {
         if (index > -1) {
             const removed = this.presets.splice(index, 1)[0];
             this.savePresets();
-            console.log(`폴더 프리셋 제거 : ${removed.name}`);
         }
     }
 
@@ -102,7 +99,7 @@ function createFolderPresetItem(preset) {
     // 선택 버튼 (V 표시)
     const selectButton = document.createElement('sp-action-button');
     selectButton.className = 'folder-preset-select';
-    selectButton.textContent = '✓';
+    selectButton.textContent = 'v';
     selectButton.title = '선택';
     selectButton.addEventListener('click', () => {
         selectFolderPreset(preset);
@@ -111,7 +108,7 @@ function createFolderPresetItem(preset) {
     // 제거 버튼
     const removeButton = document.createElement('sp-action-button');
     removeButton.className = 'folder-preset-remove';
-    removeButton.textContent = '×';
+    removeButton.textContent = 'x';
     removeButton.title = '제거';
     removeButton.addEventListener('click', () => {
         folderPresetManager.removePreset(preset.id);
@@ -125,6 +122,7 @@ function createFolderPresetItem(preset) {
     return presetItem;
 }
 
+// 폴더 프리셋 렌더링
 function renderFolderPresets() {
     const container = document.getElementById('folderPresetContainer');
     if (!container) return;
@@ -140,6 +138,7 @@ function renderFolderPresets() {
     });
 }
 
+// 새 폴더 프리셋 추가
 async function addNewFolderPreset() {
     try {
         // 폴더 선택 다이얼로그 열기
@@ -155,14 +154,13 @@ async function addNewFolderPreset() {
         const preset = folderPresetManager.addPreset(folderPath, folderName);
         renderFolderPresets();
         
-        console.log(`폴더 프리셋이 추가되었습니다: ${folderName}`);
-        
     } catch (error) {
-        console.error(`폴더 프리셋 추가 실패: ${error.message}`);
+        console.log(`폴더 프리셋 추가 실패: ${error.message}`);
         await showAlert(error.message);
     }
 }
 
+// 폴더 프리셋 선택
 function selectFolderPreset(preset) {
     try {
         // 현재 선택된 폴더 표시 업데이트
@@ -180,6 +178,7 @@ function selectFolderPreset(preset) {
     }
 }
 
+// 선택된 폴더 저장
 async function saveSelectedFolder(preset) {
     try {
         // 현재 선택된 폴더를 데이터 폴더에 저장
@@ -192,6 +191,7 @@ async function saveSelectedFolder(preset) {
     }
 }
 
+// 선택된 폴더 로드
 async function loadSelectedFolder() {
     try {
         const dataFolder = await fs.getDataFolder();

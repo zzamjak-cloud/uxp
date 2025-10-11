@@ -3,39 +3,16 @@
 module.exports = {
     // Document related constants
     DOCUMENT: {
-        RESOLUTION_72: 72,
         BACKGROUND: {
             TRANSPARENT: 'transparent',
             BLACK: 'black',
             WHITE: 'white',
         },
-        SIZE: {
-            MOBILE_PORTRAIT: {
-                WIDTH: 720,
-                HEIGHT: 1280
-            },
-            MOBILE_LANDSCAPE: {
-                WIDTH: 1280,
-                HEIGHT: 720
-            },
-            TABLET_PORTRAIT: {
-                WIDTH: 1024,
-                HEIGHT: 1366
-            },
-            TABLET_LANDSCAPE: {
-                WIDTH: 1366,
-                HEIGHT: 1024
-            },
-            DESKTOP_LANDSCAPE: {
-                WIDTH: 1920,
-                HEIGHT: 1080
-            }
-        },
         COLOR_MODE: {
-            INDEXED_COLOR: 'indexedColorMode',
-            RGB_COLOR: 'RGBColorMode',
-            CMYK_COLOR: 'CMYKColorMode',
-            GRAYSCALE_COLOR: 'grayscaleColorMode',
+            INDEXED: 'indexedColorMode',
+            RGB: 'RGBColorMode',
+            CMYK: 'CMYKColorMode',
+            GRAYSCALE: 'grayscaleColorMode',
         },
         UNIT: {
             PIXELS: 'pixelsUnit',
@@ -45,11 +22,6 @@ module.exports = {
 
     // Layer related constants
     LAYER: {
-        OPACITY: {
-            100: 100,
-            50: 50,
-            0: 0,
-        },
         TYPES: {
             SMART_OBJECT: 'smartObject',
             GROUP: 'group',
@@ -63,10 +35,6 @@ module.exports = {
             AUDIO: 'audio',
             DOCUMENT: 'document',
             LINK: 'link',
-        },
-        VISIBLE: {
-            SHOW: 'show',
-            HIDE: 'hide'
         },
         BLEND_MODES: {
             NORMAL: 'normal',
@@ -206,15 +174,8 @@ module.exports = {
         PSD: 'psd',
         PSB: 'psb',
         PNG: 'png',
-        JPG: 'jpg'
-    },
-
-    // Guide related constants
-    GUIDE: {
-        ORIENTATIONS: {
-            VERTICAL: 'vertical',
-            HORIZONTAL: 'horizontal'
-        }
+        JPG: 'jpg',
+        GIF: 'gif',
     },
 
     INTERPOLATION: {
@@ -227,20 +188,21 @@ module.exports = {
         BILINEAR: 'bilinear'
     },
 
-    FILL_COLOR: {
-        FOREGROUND: 'foregroundColor',
-        BACKGROUND: 'backgroundColor'
+    FILL: {
+        FOREGROUND_COLOR: 'foregroundColor',
+        BACKGROUND_COLOR: 'backgroundColor'
     },
 
-    TEXT_ALIGNMENT: {
-        LEFT: 'left',
-        CENTER: 'center',
-        RIGHT: 'right'
-    },
-
-    TEXT_ORIENTATION: {
-        HORIZONTAL: 'horizontal',
-        VERTICAL: 'vertical'
+    TEXT: {
+        ALIGNMENT: {
+            LEFT: 'left',
+            CENTER: 'center',
+            RIGHT: 'right'
+        },
+        ORIENTATION: {
+            HORIZONTAL: 'horizontal',
+            VERTICAL: 'vertical'
+        }
     },
 
     TOOL: {
@@ -252,14 +214,6 @@ module.exports = {
         PEN : 'penTool'
     },
 
-    // Common error messages
-    ERROR_MESSAGES: {
-        NO_SELECTION: 'Please select layers to process.',
-        NO_SMART_OBJECT: 'Please select a Smart Object or group layer.',
-        NO_GUIDES: 'No guides found in the document.',
-        INVALID_PATH: 'Invalid file path or permissions.',
-    },
-
     COMMAND: {
         CUT_TO_LAYER: 'cutToLayer',
         CLEAR_ALL_GUIDES: 'clearAllGuides',
@@ -268,9 +222,11 @@ module.exports = {
         NEW_PLACED_LAYER: 'newPlacedLayer',
         PLACED_LAYER_EDIT_CONTENTS: 'placedLayerEditContents',
         PLACED_LAYER_RELINK_TO_FILE: 'placedLayerRelinkToFile',
+        DISABLE_SINGLE_FX: 'disableSingleFX',
+        DISABLE_ALL_FX: 'disableAllFX',
     },
 
-    MESSAGES: {
+    ERROR_MESSAGES: {
         NO_SELECTION_LAYERS: '선택된 레이어가 없습니다.',
         NO_GROUP_LAYER: '그룹 레이어를 선택해주세요.',
         NO_SMART_OBJECT: '스마트 오브젝트를 선택해주세요.',
